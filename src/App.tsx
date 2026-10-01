@@ -446,15 +446,19 @@ export default function App() {
     try {
       const res = await fetch('/api/news');
       const data = await res.json();
-      if (data.success && data.data) {
-        // Filter strictly published articles for public readers
-        const publishedOnly = data.data.filter((a: any) => !a.status || a.status === 'publish');
-        setArticles(publishedOnly);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        // Filter published articles for public readers (case-insensitive)
+        const publishedOnly = data.data.filter((a: any) => 
+          !a.status || 
+          ['publish', 'published', 'active'].includes(String(a.status).toLowerCase())
+        );
+        const finalArticles = publishedOnly.length > 0 ? publishedOnly : data.data;
+        setArticles(finalArticles);
         setTrendingTopics(data.trendingTopics || []);
         setLiveSchedule(data.liveSchedule || []);
-        if (publishedOnly.length > 0 && !storyArticle) {
-          setStoryArticle(publishedOnly[0]);
-          setStoryCreditText(publishedOnly[0].imageCredit || 'Unsplash');
+        if (finalArticles.length > 0 && !storyArticle) {
+          setStoryArticle(finalArticles[0]);
+          setStoryCreditText(finalArticles[0].imageCredit || 'Unsplash');
         }
       }
     } catch (e) {
