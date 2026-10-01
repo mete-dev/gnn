@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Good News Nusantara - Segera Hadir (Coming Soon)</title>
+  <meta name="google-site-verification" content="google347822a2c05e18bd" />
+  
+  <!-- Favicon Links -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="shortcut icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  
+  <!-- Google Fonts: Roboto & Roboto Serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif:opsz,wght@8..144,400;600;700;800&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#CC0000',
+              redHover: '#990000',
+            }
+          },
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            serif: ['Roboto Serif', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FFFFFF;
+      color: #18181b;
+      font-family: 'Roboto', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Soft Red Glow */
+    .glow-red {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(204, 0, 0, 0.06) 0%, rgba(255, 255, 255, 0) 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Pulse animation for live status badge */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.1); }
+    }
+    .pulse-dot {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-red-600 selection:text-white bg-white">
+
+  <!-- Soft Ambient Glow -->
+  <div class="glow-red"></div>
+
+  <!-- Main Container -->
+  <div class="relative z-10 max-w-4xl mx-auto w-full px-6 py-16 flex-1 flex flex-col items-center justify-center text-center">
+    
+    <!-- Logo logoh.png Centered in Middle -->
+    <div class="flex justify-center mb-8">
+      <img 
+        src="logoh.png" 
+        onerror="if(!this.dataset.triedPublic){this.dataset.triedPublic=true; this.src='public/logoh.png';} else if(!this.dataset.triedIcon){this.dataset.triedIcon=true; this.src='icon/logoh.png';}"
+        alt="Good News Nusantara Logo" 
+        class="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105"
+      />
+    </div>
+
+    <!-- Status Badge -->
+    <div class="inline-flex items-center gap-2 bg-red-50 border border-red-200 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest text-[#CC0000] uppercase mb-6 shadow-xs">
+      <span class="w-2 h-2 rounded-full bg-[#CC0000] pulse-dot"></span>
+      <span>Segera Hadir • Coming Soon</span>
+    </div>
+
+    <!-- Headline Title -->
+    <h1 class="font-serif font-extrabold text-3xl sm:text-5xl md:text-6xl text-zinc-950 tracking-tight leading-tight max-w-3xl">
+      Menyajikan Kabar Baik & Inspirasi Terbaik dari Seluruh Nusantara
+    </h1>
+
+    <!-- Subtitle / Description -->
+    <p class="mt-6 text-sm sm:text-base md:text-lg text-zinc-600 font-normal max-w-2xl leading-relaxed">
+      Kami sedang mempersiapkan wajah baru portal berita positif yang menghadirkan narasi optimisme, prestasi anak bangsa, kebudayaan, serta inovasi teknologi dari seluruh penjuru Indonesia.
+    </p>
+
+    <!-- Feature Highlights Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-14 text-left w-full max-w-3xl">
+      <div class="bg-zinc-50 p-5 rounded-xl border border-zinc-200 shadow-xs space-y-1">
+        <div class="text-[#CC0000] text-xl">🇮🇩</div>
+        <h3 class="text-xs font-black uppercase tracking-wider text-zinc-900">Inspirasi Nusantara</h3>
+        <p class="text-[11px] text-zinc-500 leading-relaxed">Kisah sukses dan inovasi positif dari berbagai pelosok tanah air.</p>
+      </div>
+
+      <div class="bg-zinc-50 p-5 rounded-xl border border-zinc-200 shadow-xs space-y-1">
+        <div class="text-[#CC0000] text-xl">🎥</div>
+        <h3 class="text-xs font-black uppercase tracking-wider text-zinc-900">GNN Live TV & Podcast</h3>
+        <p class="text-[11px] text-zinc-500 leading-relaxed">Siaran multimedia 24 jam dengan tayangan berita independen.</p>
+      </div>
+
+      <div class="bg-zinc-50 p-5 rounded-xl border border-zinc-200 shadow-xs space-y-1">
+        <div class="text-[#CC0000] text-xl">📸</div>
+        <h3 class="text-xs font-black uppercase tracking-wider text-zinc-900">Render Creator</h3>
+        <p class="text-[11px] text-zinc-500 leading-relaxed">Pembuat template desain postingan otomatis untuk IG & WA.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Section -->
+  <footer class="relative z-10 max-w-7xl mx-auto w-full px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-zinc-100 text-xs text-zinc-500">
+    <div>
+      &copy; 2026 <strong class="text-zinc-800">Good News Nusantara (GNN)</strong>. Seluruh hak cipta dilindungi.
+    </div>
+
+    <!-- Social Links -->
+    <div class="flex items-center gap-5">
+      <a href="#" class="hover:text-zinc-900 font-medium transition-colors">Instagram</a>
+      <a href="#" class="hover:text-zinc-900 font-medium transition-colors">YouTube</a>
+      <a href="#" class="hover:text-zinc-900 font-medium transition-colors">Twitter / X</a>
+      <a href="#" class="hover:text-zinc-900 font-medium transition-colors">Facebook</a>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Good News Nusantara - Portal Berita Terkini & Story Creator",
+  "description": "Portal berita terkini, terpercaya, dan mendalam ala Good News Nusantara dengan liputan Inspirasi, Budaya, Ekonomi, Teknologi, Pariwisata, Alam, dan Kabar Baik.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

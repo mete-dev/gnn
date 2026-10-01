@@ -1,0 +1,56 @@
+[
+  {
+    "id": "usr-1",
+    "username": "admin",
+    "email": "admin@gnn.id",
+    "password": "admin",
+    "name": "Admin Utama GNN",
+    "role": "admin",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+    "createdAt": "2026-01-10",
+    "status": "active"
+  },
+  {
+    "id": "usr-2",
+    "username": "reviewer",
+    "email": "reviewer@gnn.id",
+    "password": "reviewer",
+    "name": "Redaktur Pelaksana (Reviuwer)",
+    "role": "reviewer",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+    "createdAt": "2026-02-15",
+    "status": "active"
+  },
+  {
+    "id": "usr-3",
+    "username": "sahabat",
+    "email": "sahabat@gnn.id",
+    "password": "sahabat",
+    "name": "Sahabat Penulis GNN",
+    "role": "sahabat",
+    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
+    "createdAt": "2026-03-01",
+    "status": "active"
+  },
+  {
+    "id": "usr-4",
+    "username": "bagus",
+    "email": "bagus@gnn.id",
+    "password": "bagus",
+    "name": "Bagus Wicaksono",
+    "role": "sahabat",
+    "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+    "createdAt": "2026-03-12",
+    "status": "active"
+  },
+  {
+    "id": "usr-google-1790774382103",
+    "username": "fadhilalanshor3974",
+    "email": "fadhilalanshor511@gmail.com",
+    "password": "google-oauth-authenticated",
+    "name": "Fadhil Al Anshor",
+    "role": "sahabat",
+    "createdAt": "2026-09-30",
+    "status": "active"
+  }
+]

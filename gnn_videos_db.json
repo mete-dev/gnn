@@ -1,0 +1,74 @@
+[
+  {
+    "id": "vid-101",
+    "title": "Keindahan Alam Indonesia dari Udara | Good News Nusantara",
+    "youtubeUrl": "https://www.youtube.com/watch?v=w80-jEaF5o0",
+    "youtubeId": "w80-jEaF5o0",
+    "description": "Dokumenter pendek keindahan bentang alam nusantara Gunung Bromo, Bali, dan pantai pesisir eksotis Indonesia.",
+    "category": "PARIWISATA",
+    "author": "Redaktur Pelaksana (Reviuwer)",
+    "authorEmail": "reviewer@gnn.id",
+    "date": "29 Sep 2026",
+    "duration": "04:15"
+  },
+  {
+    "id": "vid-102",
+    "title": "Inovasi Anak Bangsa 2026: Teknologi Hijau & Filter Air Suria",
+    "youtubeUrl": "https://www.youtube.com/watch?v=5qap5aO4i9A",
+    "youtubeId": "5qap5aO4i9A",
+    "description": "Liputan inovasi pemurni air bertenaga surya buatan mahasiswa IPB dan UGM untuk desa terpencil.",
+    "category": "TEKNOLOGI",
+    "author": "Admin Utama GNN",
+    "authorEmail": "admin@gnn.id",
+    "date": "28 Sep 2026",
+    "duration": "06:30"
+  },
+  {
+    "id": "vid-103",
+    "title": "Swadharma Bhakti Nagara: Pertumbuhan Ekonomi & UMKM Digital",
+    "youtubeUrl": "https://www.youtube.com/watch?v=EstkkvgM1KI",
+    "youtubeId": "EstkkvgM1KI",
+    "description": "Dokumenter perjalanan perbankan nasional dalam mendanai infrastruktur dan ekonomi kerakyatan Indonesia.",
+    "category": "EKONOMI",
+    "author": "Bagus Wicaksono",
+    "authorEmail": "bagus@gnn.id",
+    "date": "28 Sep 2026",
+    "duration": "06:45"
+  },
+  {
+    "id": "vid-104",
+    "title": "Warisan Budaya Reog Ponorogo & Kebaya Indonesia di UNESCO Paris",
+    "youtubeUrl": "https://www.youtube.com/watch?v=50F_bFuhw7Y",
+    "youtubeId": "50F_bFuhw7Y",
+    "description": "Dokumentasi pementasan Reog Ponorogo saat disahkan UNESCO sebagai Warisan Budaya Takbenda Dunia.",
+    "category": "BUDAYA",
+    "author": "Fadhil Al Anshori",
+    "authorEmail": "fadhil@gnn.id",
+    "date": "27 Sep 2026",
+    "duration": "05:10"
+  },
+  {
+    "id": "vid-105",
+    "title": "Konservasi Badak Jawa & Hutan Ujung Kulon Banten",
+    "youtubeUrl": "https://www.youtube.com/watch?v=Kj5Q8x1oRRE",
+    "youtubeId": "Kj5Q8x1oRRE",
+    "description": "Upaya pelestarian satwa langka badak jawa oleh Rhino Protection Unit dan Kementerian LHK.",
+    "category": "LINGKUNGAN",
+    "author": "Annisa Maharani",
+    "authorEmail": "annisa@gnn.id",
+    "date": "26 Sep 2026",
+    "duration": "07:20"
+  },
+  {
+    "id": "vid-106",
+    "title": "Kisah Petani Milenial Ekspor Kopi Arabika ke Pasar Eropa",
+    "youtubeUrl": "https://www.youtube.com/watch?v=9v1L623m48w",
+    "youtubeId": "9v1L623m48w",
+    "description": "Kisah sukses generasi muda Sukabumi memproduksi kopi organik dan menembus ekspor ke Eropa.",
+    "category": "INSPIRASI",
+    "author": "Redaksi GNN",
+    "authorEmail": "admin@gnn.id",
+    "date": "25 Sep 2026",
+    "duration": "08:15"
+  }
+]

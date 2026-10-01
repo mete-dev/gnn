@@ -1,0 +1,35 @@
+[
+  {
+    "id": "gal-101",
+    "title": "Keindahan Matahari Terbit Bromo",
+    "imageUrl": "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80",
+    "fileSizeKb": 42.5,
+    "caption": "Pemandangan kawah aktif Bromo saat fajar menyingsing",
+    "author": "Admin Utama GNN",
+    "authorEmail": "admin@gnn.id",
+    "date": "29 Sep 2026",
+    "usedCount": 3
+  },
+  {
+    "id": "gal-102",
+    "title": "Filtrasi Air Tenaga Surya TirtaSurya",
+    "imageUrl": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80",
+    "fileSizeKb": 38.2,
+    "caption": "Anak-anak menikmati air bersih terfiltrasi",
+    "author": "Sahabat Penulis GNN",
+    "authorEmail": "sahabat@gnn.id",
+    "date": "28 Sep 2026",
+    "usedCount": 2
+  },
+  {
+    "id": "gal-103",
+    "title": "Pagelaran Seni Reog Ponorogo",
+    "imageUrl": "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80",
+    "fileSizeKb": 45.1,
+    "caption": "Atraksi memukau dadak merak di Paris UNESCO",
+    "author": "Bagus Wicaksono",
+    "authorEmail": "bagus@gnn.id",
+    "date": "27 Sep 2026",
+    "usedCount": 1
+  }
+]
