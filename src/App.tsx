@@ -119,7 +119,7 @@ export default function App() {
   const [activeTopNav, setActiveTopNav] = useState<string>('GoodTalk');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('gnfi_theme');
-    return saved ? saved === 'dark' : true;
+    return saved ? saved === 'dark' : false;
   });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [visibleCount, setVisibleCount] = useState<number>(12);
