@@ -82,16 +82,31 @@ CREATE TABLE public.videos (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5. Table: pages (Generator Laman Web WYSIWYD / Halaman Khusus)
+CREATE TABLE public.pages (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    slug TEXT NOT NULL,
+    blocks JSONB DEFAULT '[]'::jsonb,
+    author TEXT,
+    author_email TEXT,
+    status TEXT DEFAULT 'publish',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS) & Public Access Policies
 ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pages ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public access for articles" ON public.articles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public access for users" ON public.users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public access for gallery" ON public.gallery FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public access for videos" ON public.videos FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public access for pages" ON public.pages FOR ALL USING (true) WITH CHECK (true);
 
 -- ==========================================================
 -- SEED DATA (Data Awal GNN)
