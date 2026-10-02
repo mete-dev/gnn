@@ -84,6 +84,8 @@ export interface Article {
   likes: number;
   views: number;
   comments: { id: string; user: string; text: string; time: string }[];
+  keywords?: string[];
+  imageCredit?: string;
   isPhotoGallery?: boolean;
   photoCount?: number;
   videoDuration?: string;
@@ -171,12 +173,78 @@ const INITIAL_GALLERY: GalleryItem[] = [];
 const INITIAL_VIDEOS: VideoItem[] = [];
 
 
+// --- SUPABASE MAPPING & ASYNC DATA HELPERS ---
+
+function mapDbToArticle(row: any): Article {
+  return {
+    id: String(row.id),
+    category: row.category,
+    subCategory: row.sub_category || row.subCategory || row.category,
+    title: row.title,
+    content: row.content,
+    image: row.image,
+    caption: row.caption || '',
+    breaking: !!row.breaking,
+    featured: !!row.featured,
+    popularRank: row.popular_rank || row.popularRank,
+    bullets: Array.isArray(row.bullets) ? row.bullets : [],
+    date: row.date || '',
+    timeAgo: row.time_ago || row.timeAgo || 'Baru saja',
+    author: row.author,
+    authorEmail: row.author_email || row.authorEmail || '',
+    editor: row.editor || 'Redaksi GNN',
+    location: row.location || 'Jakarta, Good News Nusantara',
+    keywords: Array.isArray(row.keywords) ? row.keywords : [],
+    imageCredit: row.image_credit || row.imageCredit || '',
+    likes: row.likes || 0,
+    views: row.views || 0,
+    comments: Array.isArray(row.comments) ? row.comments : [],
+    isPhotoGallery: !!(row.is_photo_gallery || row.isPhotoGallery),
+    photoCount: row.photo_count || row.photoCount || 0,
+    videoDuration: row.video_duration || row.videoDuration || '',
+    status: row.status || 'publish',
+    createdAt: row.created_at || row.createdAt,
+    updatedAt: row.updated_at || row.updatedAt,
+  };
+}
+
+function mapArticleToDb(art: Article): any {
+  return {
+    id: art.id,
+    category: art.category,
+    sub_category: art.subCategory,
+    title: art.title,
+    content: art.content,
+    image: art.image,
+    caption: art.caption,
+    breaking: !!art.breaking,
+    featured: !!art.featured,
+    popular_rank: art.popularRank || null,
+    bullets: art.bullets || [],
+    date: art.date,
+    time_ago: art.timeAgo,
+    author: art.author,
+    author_email: art.authorEmail,
+    editor: art.editor,
+    location: art.location,
+    keywords: art.keywords || [],
+    image_credit: art.imageCredit,
+    likes: art.likes || 0,
+    views: art.views || 0,
+    comments: art.comments || [],
+    is_photo_gallery: !!art.isPhotoGallery,
+    photo_count: art.photoCount || 0,
+    video_duration: art.videoDuration,
+    status: art.status || 'publish',
+    updated_at: new Date().toISOString(),
+  };
+}
+
 function loadNews(): Article[] {
   if (fs.existsSync(DB_FILE)) {
     try {
       const data = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed: Article[] = JSON.parse(data);
-      // Ensure all articles have status field (default 'publish')
       return parsed.map(a => ({ ...a, status: a.status || 'publish' }));
     } catch (e) {
       console.error('Error loading GNN news DB:', e);
@@ -191,6 +259,72 @@ function saveNews(articles: Article[]) {
   } catch (e) {
     console.error('Error saving GNN news DB:', e);
   }
+}
+
+async function loadNewsAsync(): Promise<Article[]> {
+  try {
+    const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+      saveNews(data.map(mapDbToArticle));
+      return data.map(mapDbToArticle);
+    }
+  } catch (e) {
+    console.warn('Supabase articles fetch fallback to local DB:', e);
+  }
+  return loadNews();
+}
+
+async function saveNewsItemAsync(article: Article): Promise<void> {
+  const current = loadNews();
+  const idx = current.findIndex(a => a.id === article.id);
+  let updatedList = [...current];
+  if (idx !== -1) updatedList[idx] = article;
+  else updatedList.unshift(article);
+  saveNews(updatedList);
+
+  try {
+    const dbRow = mapArticleToDb(article);
+    await supabase.from('articles').upsert(dbRow);
+  } catch (e) {
+    console.error('Error syncing article to Supabase:', e);
+  }
+}
+
+async function deleteNewsItemAsync(id: string): Promise<void> {
+  saveNews(loadNews().filter(a => a.id !== id));
+  try {
+    await supabase.from('articles').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting article from Supabase:', e);
+  }
+}
+
+// User Sync Helpers
+function mapDbToUser(row: any): User {
+  return {
+    id: String(row.id),
+    username: row.username,
+    email: row.email,
+    name: row.name,
+    role: row.role || 'sahabat',
+    password: row.password,
+    avatar: row.avatar,
+    createdAt: row.created_at || row.createdAt,
+    status: row.status || 'active',
+  };
+}
+
+function mapUserToDb(u: User): any {
+  return {
+    id: u.id,
+    username: u.username,
+    email: u.email,
+    name: u.name,
+    role: u.role,
+    password: u.password,
+    avatar: u.avatar,
+    status: u.status || 'active',
+  };
 }
 
 function loadUsers(): User[] {
@@ -212,6 +346,72 @@ function saveUsers(users: User[]) {
   }
 }
 
+async function loadUsersAsync(): Promise<User[]> {
+  try {
+    const { data, error } = await supabase.from('users').select('*');
+    if (!error && Array.isArray(data) && data.length > 0) {
+      saveUsers(data.map(mapDbToUser));
+      return data.map(mapDbToUser);
+    }
+  } catch (e) {
+    console.warn('Supabase users fetch fallback to local DB:', e);
+  }
+  return loadUsers();
+}
+
+async function saveUserAsync(user: User): Promise<void> {
+  const current = loadUsers();
+  const idx = current.findIndex(u => u.id === user.id);
+  let updated = [...current];
+  if (idx !== -1) updated[idx] = user;
+  else updated.push(user);
+  saveUsers(updated);
+
+  try {
+    await supabase.from('users').upsert(mapUserToDb(user));
+  } catch (e) {
+    console.error('Error syncing user to Supabase:', e);
+  }
+}
+
+async function deleteUserAsync(id: string): Promise<void> {
+  saveUsers(loadUsers().filter(u => u.id !== id));
+  try {
+    await supabase.from('users').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting user from Supabase:', e);
+  }
+}
+
+// Gallery Sync Helpers
+function mapDbToGallery(row: any): GalleryItem {
+  return {
+    id: String(row.id),
+    title: row.title,
+    imageUrl: row.image_url || row.imageUrl,
+    fileSizeKb: row.file_size_kb || row.fileSizeKb || 0,
+    caption: row.caption,
+    author: row.author,
+    authorEmail: row.author_email || row.authorEmail,
+    date: row.date,
+    usedCount: row.used_count || row.usedCount || 0,
+  };
+}
+
+function mapGalleryToDb(g: GalleryItem): any {
+  return {
+    id: g.id,
+    title: g.title,
+    image_url: g.imageUrl,
+    file_size_kb: g.fileSizeKb,
+    caption: g.caption,
+    author: g.author,
+    author_email: g.authorEmail,
+    date: g.date,
+    used_count: g.usedCount || 0,
+  };
+}
+
 function loadGallery(): GalleryItem[] {
   if (fs.existsSync(GALLERY_DB_FILE)) {
     try {
@@ -229,6 +429,76 @@ function saveGallery(items: GalleryItem[]) {
   } catch (e) {
     console.error('Error saving gallery DB:', e);
   }
+}
+
+async function loadGalleryAsync(): Promise<GalleryItem[]> {
+  try {
+    const { data, error } = await supabase.from('gallery').select('*');
+    if (!error && Array.isArray(data)) {
+      saveGallery(data.map(mapDbToGallery));
+      return data.map(mapDbToGallery);
+    }
+  } catch (e) {
+    console.warn('Supabase gallery fetch fallback to local DB:', e);
+  }
+  return loadGallery();
+}
+
+async function saveGalleryAsync(item: GalleryItem): Promise<void> {
+  const current = loadGallery();
+  const idx = current.findIndex(g => g.id === item.id);
+  let updated = [...current];
+  if (idx !== -1) updated[idx] = item;
+  else updated.unshift(item);
+  saveGallery(updated);
+
+  try {
+    await supabase.from('gallery').upsert(mapGalleryToDb(item));
+  } catch (e) {
+    console.error('Error syncing gallery to Supabase:', e);
+  }
+}
+
+async function deleteGalleryAsync(id: string): Promise<void> {
+  saveGallery(loadGallery().filter(g => g.id !== id));
+  try {
+    await supabase.from('gallery').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting gallery item from Supabase:', e);
+  }
+}
+
+// Video Sync Helpers
+function mapDbToVideo(row: any): VideoItem {
+  return {
+    id: String(row.id),
+    title: row.title,
+    youtubeUrl: row.youtube_url || row.youtubeUrl,
+    youtubeId: row.youtube_id || row.youtubeId,
+    description: row.description,
+    category: row.category,
+    subCategory: row.sub_category || row.subCategory,
+    author: row.author,
+    authorEmail: row.author_email || row.authorEmail,
+    date: row.date,
+    duration: row.duration,
+  };
+}
+
+function mapVideoToDb(v: VideoItem): any {
+  return {
+    id: v.id,
+    title: v.title,
+    youtube_url: v.youtubeUrl,
+    youtube_id: v.youtubeId,
+    description: v.description,
+    category: v.category,
+    sub_category: v.subCategory,
+    author: v.author,
+    author_email: v.authorEmail,
+    date: v.date,
+    duration: v.duration,
+  };
 }
 
 function loadVideos(): VideoItem[] {
@@ -250,10 +520,48 @@ function saveVideos(items: VideoItem[]) {
   }
 }
 
+async function loadVideosAsync(): Promise<VideoItem[]> {
+  try {
+    const { data, error } = await supabase.from('videos').select('*');
+    if (!error && Array.isArray(data)) {
+      saveVideos(data.map(mapDbToVideo));
+      return data.map(mapDbToVideo);
+    }
+  } catch (e) {
+    console.warn('Supabase videos fetch fallback to local DB:', e);
+  }
+  return loadVideos();
+}
+
+async function saveVideoAsync(item: VideoItem): Promise<void> {
+  const current = loadVideos();
+  const idx = current.findIndex(v => v.id === item.id);
+  let updated = [...current];
+  if (idx !== -1) updated[idx] = item;
+  else updated.unshift(item);
+  saveVideos(updated);
+
+  try {
+    await supabase.from('videos').upsert(mapVideoToDb(item));
+  } catch (e) {
+    console.error('Error syncing video to Supabase:', e);
+  }
+}
+
+async function deleteVideoAsync(id: string): Promise<void> {
+  saveVideos(loadVideos().filter(v => v.id !== id));
+  try {
+    await supabase.from('videos').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting video item from Supabase:', e);
+  }
+}
+
 if (!fs.existsSync(DB_FILE)) saveNews(INITIAL_ARTICLES.map(a => ({ ...a, status: 'publish' })));
 if (!fs.existsSync(USERS_DB_FILE)) saveUsers(INITIAL_USERS);
 if (!fs.existsSync(GALLERY_DB_FILE)) saveGallery(INITIAL_GALLERY);
 if (!fs.existsSync(VIDEOS_DB_FILE)) saveVideos(INITIAL_VIDEOS);
+
 
 // Trending hashtags on Good News Nusantara
 const TRENDING_TOPICS = [
@@ -307,8 +615,8 @@ app.get('/api/supabase/status', async (req, res) => {
 
 
 // 1. Get articles (supports ?status=publish|review|draft & ?authorEmail=...)
-app.get('/api/news', (req, res) => {
-  let articles = loadNews();
+app.get('/api/news', async (req, res) => {
+  let articles = await loadNewsAsync();
   const { status, authorEmail, role } = req.query;
 
   if (status) {
@@ -329,8 +637,7 @@ app.get('/api/news', (req, res) => {
 });
 
 // 2. Create article with workflow status
-app.post('/api/news', (req, res) => {
-  const articles = loadNews();
+app.post('/api/news', async (req, res) => {
   const { title, content, category, subCategory, image, caption, author, authorEmail, editor, breaking, bullets, status } = req.body;
 
   if (!title || !content || !category) {
@@ -366,14 +673,13 @@ app.post('/api/news', (req, res) => {
     updatedAt: new Date().toISOString()
   };
 
-  articles.unshift(newArticle);
-  saveNews(articles);
+  await saveNewsItemAsync(newArticle);
   res.json({ success: true, data: newArticle });
 });
 
 // 3. Edit article
-app.put('/api/news/:id', (req, res) => {
-  const articles = loadNews();
+app.put('/api/news/:id', async (req, res) => {
+  const articles = await loadNewsAsync();
   const { id } = req.params;
   const idx = articles.findIndex(a => a.id === id);
 
@@ -381,19 +687,20 @@ app.put('/api/news/:id', (req, res) => {
     return res.status(404).json({ success: false, message: 'Artikel tidak ditemukan.' });
   }
 
-  articles[idx] = { 
+  const updatedArticle: Article = { 
     ...articles[idx], 
     ...req.body, 
     id,
     updatedAt: new Date().toISOString()
   };
-  saveNews(articles);
-  res.json({ success: true, data: articles[idx] });
+
+  await saveNewsItemAsync(updatedArticle);
+  res.json({ success: true, data: updatedArticle });
 });
 
 // 4. Delete article
-app.delete('/api/news/:id', (req, res) => {
-  const articles = loadNews();
+app.delete('/api/news/:id', async (req, res) => {
+  const articles = await loadNewsAsync();
   const { id } = req.params;
   const filtered = articles.filter(a => a.id !== id);
 
@@ -401,13 +708,13 @@ app.delete('/api/news/:id', (req, res) => {
     return res.status(404).json({ success: false, message: 'Artikel tidak ditemukan.' });
   }
 
-  saveNews(filtered);
+  await deleteNewsItemAsync(id);
   res.json({ success: true, message: 'Artikel berhasil dihapus.' });
 });
 
 // --- AUTH & LOGIN ROUTE ---
-app.post('/api/auth/login', (req, res) => {
-  const users = loadUsers();
+app.post('/api/auth/login', async (req, res) => {
+  const users = await loadUsersAsync();
   const { identifier, password } = req.body;
 
   if (!identifier || !password) {
@@ -469,8 +776,8 @@ app.get('/api/auth/google/config', (req, res) => {
   });
 });
 
-app.post('/api/auth/google', (req, res) => {
-  const users = loadUsers();
+app.post('/api/auth/google', async (req, res) => {
+  const users = await loadUsersAsync();
   const { googleToken, email, name, picture, credential } = req.body;
 
   // Try to parse JWT payload from Google credential if passed
@@ -510,8 +817,7 @@ app.post('/api/auth/google', (req, res) => {
       createdAt: new Date().toISOString().split('T')[0],
       status: 'active',
     };
-    users.push(user);
-    saveUsers(users);
+    await saveUserAsync(user);
   }
 
   if (user.status === 'inactive') {
@@ -540,8 +846,8 @@ app.all('/api/auth/callback/google', (req, res) => {
 
 
 // --- REGISTER SAHABAT ROUTE ---
-app.post('/api/auth/register-sahabat', (req, res) => {
-  const users = loadUsers();
+app.post('/api/auth/register-sahabat', async (req, res) => {
+  const users = await loadUsersAsync();
   const {
     name,
     username,
@@ -579,8 +885,7 @@ app.post('/api/auth/register-sahabat', (req, res) => {
     status: 'active',
   };
 
-  users.push(newUser);
-  saveUsers(users);
+  await saveUserAsync(newUser);
 
   res.json({
     success: true,
@@ -601,13 +906,13 @@ app.post('/api/auth/register-sahabat', (req, res) => {
 });
 
 // --- USER MANAGEMENT ROUTES (ADMIN ONLY) ---
-app.get('/api/users', (req, res) => {
-  const users = loadUsers();
+app.get('/api/users', async (req, res) => {
+  const users = await loadUsersAsync();
   res.json({ success: true, data: users });
 });
 
-app.post('/api/users', (req, res) => {
-  const users = loadUsers();
+app.post('/api/users', async (req, res) => {
+  const users = await loadUsersAsync();
   const { name, email, role, username, password, status } = req.body;
 
   if (!name || !email || !role) {
@@ -629,13 +934,12 @@ app.post('/api/users', (req, res) => {
     status: status || 'active',
   };
 
-  users.push(newUser);
-  saveUsers(users);
+  await saveUserAsync(newUser);
   res.json({ success: true, data: newUser });
 });
 
-app.put('/api/users/:id', (req, res) => {
-  const users = loadUsers();
+app.put('/api/users/:id', async (req, res) => {
+  const users = await loadUsersAsync();
   const { id } = req.params;
   const idx = users.findIndex((u) => u.id === id);
 
@@ -657,13 +961,12 @@ app.put('/api/users/:id', (req, res) => {
     updatedUser.password = String(password).trim();
   }
 
-  users[idx] = updatedUser;
-  saveUsers(users);
-  res.json({ success: true, data: users[idx] });
+  await saveUserAsync(updatedUser);
+  res.json({ success: true, data: updatedUser });
 });
 
-app.delete('/api/users/:id', (req, res) => {
-  const users = loadUsers();
+app.delete('/api/users/:id', async (req, res) => {
+  const users = await loadUsersAsync();
   const { id } = req.params;
   const filtered = users.filter((u) => u.id !== id);
 
@@ -671,18 +974,17 @@ app.delete('/api/users/:id', (req, res) => {
     return res.status(404).json({ success: false, message: 'Pengguna tidak ditemukan.' });
   }
 
-  saveUsers(filtered);
+  await deleteUserAsync(id);
   res.json({ success: true, message: 'Pengguna berhasil dihapus.' });
 });
 
 // --- GALLERY ROUTES ---
-app.get('/api/gallery', (req, res) => {
-  const gallery = loadGallery();
+app.get('/api/gallery', async (req, res) => {
+  const gallery = await loadGalleryAsync();
   res.json({ success: true, data: gallery });
 });
 
-app.post('/api/gallery', (req, res) => {
-  const gallery = loadGallery();
+app.post('/api/gallery', async (req, res) => {
   const { title, imageUrl, fileSizeKb, caption, author, authorEmail } = req.body;
 
   if (!imageUrl || !title) {
@@ -701,27 +1003,23 @@ app.post('/api/gallery', (req, res) => {
     usedCount: 0
   };
 
-  gallery.unshift(newItem);
-  saveGallery(gallery);
+  await saveGalleryAsync(newItem);
   res.json({ success: true, data: newItem });
 });
 
-app.delete('/api/gallery/:id', (req, res) => {
-  const gallery = loadGallery();
+app.delete('/api/gallery/:id', async (req, res) => {
   const { id } = req.params;
-  const filtered = gallery.filter(g => g.id !== id);
-  saveGallery(filtered);
+  await deleteGalleryAsync(id);
   res.json({ success: true, message: 'Gambar galeri berhasil dihapus.' });
 });
 
 // --- VIDEO ROUTES ---
-app.get('/api/videos', (req, res) => {
-  const videos = loadVideos();
+app.get('/api/videos', async (req, res) => {
+  const videos = await loadVideosAsync();
   res.json({ success: true, data: videos });
 });
 
-app.post('/api/videos', (req, res) => {
-  const videos = loadVideos();
+app.post('/api/videos', async (req, res) => {
   const { title, youtubeUrl, description, category, subCategory, author, authorEmail } = req.body;
 
   if (!title || !youtubeUrl) {
@@ -751,13 +1049,12 @@ app.post('/api/videos', (req, res) => {
     duration: '03:45'
   };
 
-  videos.unshift(newItem);
-  saveVideos(videos);
+  await saveVideoAsync(newItem);
   res.json({ success: true, data: newItem });
 });
 
-app.put('/api/videos/:id', (req, res) => {
-  const videos = loadVideos();
+app.put('/api/videos/:id', async (req, res) => {
+  const videos = await loadVideosAsync();
   const { id } = req.params;
   const idx = videos.findIndex(v => v.id === id);
 
@@ -777,7 +1074,7 @@ app.put('/api/videos/:id', (req, res) => {
     }
   }
 
-  videos[idx] = {
+  const updatedVideo: VideoItem = {
     ...videos[idx],
     ...(title && { title }),
     ...(youtubeUrl && { youtubeUrl }),
@@ -788,15 +1085,13 @@ app.put('/api/videos/:id', (req, res) => {
     ...(duration && { duration }),
   };
 
-  saveVideos(videos);
-  res.json({ success: true, data: videos[idx] });
+  await saveVideoAsync(updatedVideo);
+  res.json({ success: true, data: updatedVideo });
 });
 
-app.delete('/api/videos/:id', (req, res) => {
-  const videos = loadVideos();
+app.delete('/api/videos/:id', async (req, res) => {
   const { id } = req.params;
-  const filtered = videos.filter(v => v.id !== id);
-  saveVideos(filtered);
+  await deleteVideoAsync(id);
   res.json({ success: true, message: 'Video berhasil dihapus.' });
 });
 
@@ -871,8 +1166,8 @@ app.post('/api/settings/restore', (req, res) => {
 });
 
 // 5. Like article
-app.post('/api/news/:id/like', (req, res) => {
-  const articles = loadNews();
+app.post('/api/news/:id/like', async (req, res) => {
+  const articles = await loadNewsAsync();
   const { id } = req.params;
   const article = articles.find(a => a.id === id);
 
@@ -881,13 +1176,13 @@ app.post('/api/news/:id/like', (req, res) => {
   }
 
   article.likes = (article.likes || 0) + 1;
-  saveNews(articles);
+  await saveNewsItemAsync(article);
   res.json({ success: true, likes: article.likes });
 });
 
 // 6. Comment on article
-app.post('/api/news/:id/comment', (req, res) => {
-  const articles = loadNews();
+app.post('/api/news/:id/comment', async (req, res) => {
+  const articles = await loadNewsAsync();
   const { id } = req.params;
   const { user, text } = req.body;
 
@@ -909,7 +1204,7 @@ app.post('/api/news/:id/comment', (req, res) => {
 
   article.comments = article.comments || [];
   article.comments.unshift(newComment);
-  saveNews(articles);
+  await saveNewsItemAsync(article);
   res.json({ success: true, comment: newComment });
 });
 
@@ -953,9 +1248,7 @@ app.post('/api/news/generate-ai', async (req, res) => {
       comments: []
     };
 
-    const articles = loadNews();
-    articles.unshift(simulatedArticle);
-    saveNews(articles);
+    await saveNewsItemAsync(simulatedArticle);
 
     return res.json({ success: true, data: simulatedArticle });
   }
@@ -1023,9 +1316,7 @@ Kembalikan respon dalam JSON valid:
       comments: []
     };
 
-    const articles = loadNews();
-    articles.unshift(newArticle);
-    saveNews(articles);
+    await saveNewsItemAsync(newArticle);
 
     res.json({ success: true, data: newArticle });
   } catch (err: any) {
