@@ -27,6 +27,7 @@ import { GalleryManager } from './GalleryManager';
 import { VideosManager } from './VideosManager';
 import { UsersManager } from './UsersManager';
 import { SettingsManager } from './SettingsManager';
+import { WysiwydPageBuilder } from './WysiwydPageBuilder';
 import { GnfiLogo } from '../GnfiLogo';
 
 interface StudioDashboardProps {
@@ -36,7 +37,7 @@ interface StudioDashboardProps {
   onLogout: () => void;
 }
 
-export type StudioTab = 'artikel' | 'buat-artikel' | 'galeri' | 'video' | 'pengguna' | 'pengaturan';
+export type StudioTab = 'artikel' | 'buat-artikel' | 'galeri' | 'video' | 'halaman' | 'pengguna' | 'pengaturan';
 
 export const StudioDashboard: React.FC<StudioDashboardProps> = ({
   currentUser,
@@ -44,12 +45,13 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
   onBackToPortal,
   onLogout,
 }) => {
-  // Deep-link route hash mapping: #/studio/artikel, #/studio/buat-artikel, #/studio/galeri, etc.
+  // Deep-link route hash mapping: #/studio/artikel, #/studio/buat-artikel, #/studio/galeri, #/studio/halaman, etc.
   const [activeTab, setActiveTab] = useState<StudioTab>(() => {
     const hash = window.location.hash;
     if (hash.includes('/buat-artikel')) return 'buat-artikel';
     if (hash.includes('/galeri')) return 'galeri';
     if (hash.includes('/video')) return 'video';
+    if (hash.includes('/halaman')) return 'halaman';
     if (hash.includes('/pengguna') && currentUser.role === 'admin') return 'pengguna';
     if (hash.includes('/pengaturan') && currentUser.role === 'admin') return 'pengaturan';
     return 'artikel';
@@ -76,6 +78,7 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
       if (hash.includes('/buat-artikel')) setActiveTab('buat-artikel');
       else if (hash.includes('/galeri')) setActiveTab('galeri');
       else if (hash.includes('/video')) setActiveTab('video');
+      else if (hash.includes('/halaman')) setActiveTab('halaman');
       else if (hash.includes('/pengguna') && currentUser.role === 'admin') setActiveTab('pengguna');
       else if (hash.includes('/pengaturan') && currentUser.role === 'admin') setActiveTab('pengaturan');
       else setActiveTab('artikel');
@@ -316,6 +319,7 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
 
   const NAV_ITEMS = [
     { id: 'artikel', label: 'Artikel', icon: FileText, roleAllowed: ['admin', 'reviewer', 'sahabat'] },
+    { id: 'halaman', label: 'Halaman', icon: Layers, roleAllowed: ['admin', 'reviewer', 'sahabat'] },
     { id: 'galeri', label: 'Galeri Foto', icon: ImageIcon, roleAllowed: ['admin', 'reviewer', 'sahabat'] },
     { id: 'video', label: 'Video YouTube', icon: Video, roleAllowed: ['admin', 'reviewer', 'sahabat'] },
     { id: 'pengguna', label: 'Pengguna', icon: Users, roleAllowed: ['admin'] },
@@ -545,6 +549,10 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
                 />
               )}
 
+              {activeTab === 'halaman' && (
+                <WysiwydPageBuilder articles={articles} />
+              )}
+
               {activeTab === 'galeri' && (
                 <GalleryManager
                   items={galleryItems}
@@ -604,3 +612,4 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
     </div>
   );
 };
+
