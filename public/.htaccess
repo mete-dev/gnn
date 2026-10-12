@@ -1,19 +1,88 @@
+<IfModule mod_dir.c>
+  DirectoryIndex index.php index.html
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Forward API requests to Node.js backend if running locally on port 3060
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteRule ^api/(.*)$ http://127.0.0.1:3060/api/$1 [P,L]
+  # Dynamic XML Sitemap
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
-  # SPA Routing Fallback
+  # 1. API Route Rewrites to PHP Scripts
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^ index.html [L]
+  RewriteRule ^api/news/generate-ai/?$ api/generate_ai.php [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/news/([0-9a-zA-Z_-]+)/like/?$ api/news.php?id=$1&action=like [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/news/([0-9a-zA-Z_-]+)/comment/?$ api/news.php?id=$1&action=comment [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/news/([0-9a-zA-Z_-]+)/?$ api/news.php?id=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/news/?$ api/news.php [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/videos/([0-9a-zA-Z_-]+)/?$ api/videos.php?id=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/videos/?$ api/videos.php [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/gallery/([0-9a-zA-Z_-]+)/?$ api/gallery.php?id=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/gallery/?$ api/gallery.php [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/auth/([0-9a-zA-Z_-]+)/?$ api/auth.php?action=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/settings/([0-9a-zA-Z_-]+)/?$ api/settings.php?action=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/settings/?$ api/settings.php [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/users/([0-9a-zA-Z_-]+)/?$ api/users.php?id=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/users/?$ api/users.php [QSA,L]
+
+  # 2. Clean URL for Article Render (/link-artikel/render)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^([^/]+)/render/?$ index.php?view=render&article=$1 [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^([^/]+)/([^/]+)/render/?$ index.php?view=render&user=$1&article=$2 [QSA,L]
+
+  # 3. Native PHP Routing Fallback
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.php [L]
 </IfModule>
 
 <IfModule mod_headers.c>
-  <FilesMatch "\.(html|htm)$">
+  <FilesMatch "\.(php|html|htm)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"

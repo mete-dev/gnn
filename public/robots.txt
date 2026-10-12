@@ -1,0 +1,8 @@
+# Robots.txt for Good News Nusantara | Jadi Tahu Indonesia
+User-agent: *
+Allow: /
+Disallow: /studio/
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://gnn.web.id/sitemap.xml

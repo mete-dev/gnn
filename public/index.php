@@ -46,10 +46,48 @@ function getSafeArticleImage($img, $category = '') {
         'POLITIK' => 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
         'HUKUM' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
         'SOSIAL' => 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80',
+        'SEJARAH' => 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1200&q=80',
         'LIFESTYLE' => 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=1200&q=80',
     ];
     $catUpper = strtoupper(trim($category));
     return $defaults[$catUpper] ?? 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';
+}
+
+function cleanAndFormatArticleContent($content) {
+    if (empty($content)) return '';
+
+    // If HTML entities were stored (e.g. &lt;div&gt; &lt;br&gt; &lt;/div&gt;)
+    if (str_contains($content, '&lt;div') || str_contains($content, '&lt;p') || str_contains($content, '&lt;br') || str_contains($content, '&lt;span') || str_contains($content, '&amp;nbsp;')) {
+        $content = htmlspecialchars_decode($content, ENT_QUOTES);
+    }
+
+    // Clean up empty lines or divs like <div><br></div>, <div> <br> </div>, <div>&nbsp;</div>
+    $content = preg_replace('/<div>\s*(<br\s*\/?>|&nbsp;)?\s*<\/div>/i', "\n\n", $content);
+
+    // If it has HTML tags
+    if (preg_match('/<[a-z][\s\S]*>/i', $content)) {
+        // Strip dangerous scripts
+        $content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $content);
+        // Replace consecutive <br>
+        $content = preg_replace('/(<br\s*\/?>\s*){3,}/i', '<br><br>', $content);
+        return $content;
+    }
+
+    // Plain text: split into paragraphs
+    $paragraphs = array_filter(array_map('trim', explode("\n", $content)));
+    $html = '';
+    foreach ($paragraphs as $p) {
+        if ($p) {
+            $html .= '<p>' . htmlspecialchars($p) . '</p>';
+        }
+    }
+    return $html ?: nl2br(htmlspecialchars($content));
+}
+
+function getArticleUrl($art) {
+    if (empty($art)) return '/';
+    $title = $art['title'] ?? $art['id'] ?? '';
+    return '/' . slugify($title);
 }
 
 // Clean URL parser for /link-artikel/render and /link-artikel
@@ -77,7 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $commentId = 'c-' . time() . '-' . rand(100, 999);
         $stmtCmt = $db->prepare("INSERT INTO comments (id, article_id, user, text, time) VALUES (?, ?, ?, ?, ?)");
         $stmtCmt->execute([$commentId, $articleId, $user, $text, 'Baru saja']);
-        header("Location: ?article=" . urlencode($articleId) . "#komentar");
+        $chkArt = $db->prepare("SELECT title FROM articles WHERE id = ?");
+        $chkArt->execute([$articleId]);
+        $artRow = $chkArt->fetch();
+        $targetUrl = $artRow ? '/' . slugify($artRow['title']) : '?article=' . urlencode($articleId);
+        header("Location: " . $targetUrl . "#komentar");
         exit();
     }
 }
@@ -87,7 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $articleId = trim($_POST['article_id'] ?? '');
     if ($articleId) {
         $db->prepare("UPDATE articles SET likes = likes + 1 WHERE id = ?")->execute([$articleId]);
-        header("Location: ?article=" . urlencode($articleId));
+        $chkArt = $db->prepare("SELECT title FROM articles WHERE id = ?");
+        $chkArt->execute([$articleId]);
+        $artRow = $chkArt->fetch();
+        $targetUrl = $artRow ? '/' . slugify($artRow['title']) : '?article=' . urlencode($articleId);
+        header("Location: " . $targetUrl);
         exit();
     }
 }
@@ -109,10 +155,21 @@ if ($articleParam && $viewParam !== 'render') {
         $targetSlug = slugify($articleParam);
         $allCheck = $db->query("SELECT * FROM articles WHERE status = 'publish' OR status IS NULL OR status = ''")->fetchAll();
         foreach ($allCheck as $chk) {
-            if (slugify($chk['title']) === $targetSlug || slugify($chk['id']) === $targetSlug) {
+            $itemSlug = slugify($chk['title']);
+            if ($itemSlug === $targetSlug || slugify($chk['id']) === $targetSlug) {
                 $article = $chk;
                 $articleParam = $chk['id'];
                 break;
+            }
+        }
+        if (!$article) {
+            foreach ($allCheck as $chk) {
+                $itemSlug = slugify($chk['title']);
+                if (str_starts_with($itemSlug, $targetSlug) || str_starts_with($targetSlug, $itemSlug)) {
+                    $article = $chk;
+                    $articleParam = $chk['id'];
+                    break;
+                }
             }
         }
     }
@@ -251,7 +308,7 @@ if ($article) {
     $pageTitle = htmlspecialchars($article['title']) . " - Good News Nusantara | Jadi Tahu Indonesia";
     $pageDesc = mb_substr(strip_tags($article['content']), 0, 160) . '...';
     $pageImage = $article['image'] ?: $pageImage;
-    $pageUrl = "https://gnn.web.id/?article=" . urlencode($article['id']);
+    $pageUrl = "https://gnn.web.id/" . slugify($article['title']);
 } elseif ($categoryParam) {
     $pageTitle = "Kategori " . htmlspecialchars($categoryParam) . " - Good News Nusantara | Jadi Tahu Indonesia";
 } elseif ($queryParam) {
@@ -364,7 +421,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
   <!-- Google Fonts & Tailwind CSS CDN (Zero Build Tools) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Roboto+Serif:ital,opsz,wght@0,8..144,400..900;1,8..144,400..900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
@@ -388,13 +445,44 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
           },
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            serif: ['"Playfair Display"', 'serif']
+            serif: ['"Roboto Serif"', 'Georgia', 'serif']
           }
         }
       }
     }
   </script>
   <style>
+    .font-serif, h1.font-serif, h2.font-serif, h3.font-serif, .article-title, .story-title, #canvasTextFull, #canvasTextSplit {
+      font-family: 'Roboto Serif', Georgia, serif !important;
+    }
+    .prose p {
+      margin-bottom: 1.25rem;
+      line-height: 1.85;
+    }
+    .prose div {
+      margin-bottom: 0.75rem;
+      line-height: 1.85;
+    }
+    .prose h2, .prose h3 {
+      font-family: 'Roboto Serif', Georgia, serif;
+      font-weight: 800;
+      margin-top: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .prose blockquote {
+      border-left: 4px solid #CC0000;
+      padding-left: 1rem;
+      font-style: italic;
+      margin: 1.5rem 0;
+    }
+    .prose figure {
+      margin: 1.5rem 0;
+    }
+    .prose figure img {
+      border-radius: 1rem;
+      max-width: 100%;
+      height: auto;
+    }
     @keyframes marquee {
       0% { transform: translateX(0%); }
       100% { transform: translateX(-50%); }
@@ -573,7 +661,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
     <div class="overflow-hidden whitespace-nowrap flex-grow relative">
       <div class="inline-flex gap-8 text-[12px] font-medium animate-marquee">
         <?php foreach (array_merge($breakingArticles, $breakingArticles) as $bItem): ?>
-          <a href="?article=<?= urlencode($bItem['id']) ?>" class="hover:underline inline-flex items-center gap-2 shrink-0 text-white">
+          <a href="/<?= slugify($bItem['title']) ?>" class="hover:underline inline-flex items-center gap-2 shrink-0 text-white">
             <span class="font-bold text-yellow-300">[<?= htmlspecialchars($bItem['category']) ?>]</span>
             <span><?= htmlspecialchars($bItem['title']) ?></span>
             <span class="text-white/60">•</span>
@@ -631,7 +719,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
           <!-- Article Content -->
           <div class="prose max-w-none text-zinc-800 dark:text-zinc-200 text-base leading-relaxed space-y-4 mb-8">
-            <?= nl2br(htmlspecialchars($article['content'])) ?>
+            <?= cleanAndFormatArticleContent($article['content']) ?>
           </div>
 
           <!-- ACTION BAR: RENDER STORY, LIKE & SOCIAL SHARE -->
@@ -715,7 +803,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             </h3>
             <div class="space-y-4">
               <?php foreach ($trendingArticles as $idx => $trend): ?>
-                <a href="?article=<?= urlencode($trend['id']) ?>" class="flex items-start gap-3 group">
+                <a href="/<?= slugify($trend['title']) ?>" class="flex items-start gap-3 group">
                   <span class="font-serif font-black text-2xl text-red-700 w-6 leading-none"><?= $idx + 1 ?></span>
                   <div class="flex-1">
                     <span class="text-[10px] font-bold text-red-700 uppercase"><?= htmlspecialchars($trend['category']) ?></span>
@@ -772,7 +860,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
       $initialTitle = !empty($selectedRenderArticle['title']) ? $selectedRenderArticle['title'] : 'Inovasi Anak Bangsa Membawa Kemajuan Bagi Nusantara';
       $initialImage = getSafeArticleImage($selectedRenderArticle['image'] ?? '', $selectedRenderArticle['category'] ?? '');
       $initialCategory = !empty($selectedRenderArticle['category']) ? $selectedRenderArticle['category'] : 'INSPIRASI';
-      $initialCredit = !empty($selectedRenderArticle['author']) ? $selectedRenderArticle['author'] : 'Tim Redaksi GNN';
+      $initialCredit = !empty($selectedRenderArticle['image_credit']) ? $selectedRenderArticle['image_credit'] : (!empty($selectedRenderArticle['caption']) ? $selectedRenderArticle['caption'] : 'Dok. Redaksi Good News Nusantara');
       ?>
       <div class="mb-8">
         <div class="border-b border-zinc-200 dark:border-zinc-800 pb-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -812,7 +900,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                     <?= htmlspecialchars($initialTitle) ?>
                   </h4>
                   <div class="text-[10px] text-zinc-500 mt-1">
-                    Penulis / Kredit: <span class="font-semibold text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($initialCredit) ?></span>
+                    Kredit Foto: <span class="font-semibold text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($initialCredit) ?></span>
                   </div>
                 </div>
                 <?php if (!empty($selectedRenderArticle['id'])): ?>
@@ -920,19 +1008,19 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                   <div class="absolute inset-x-0 bottom-0 flex flex-col justify-end text-left z-10"
                        style="background: linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.45) 75%, transparent 100%); padding-top: 100px; padding-bottom: 30px; padding-left: 24px; padding-right: 24px;">
 
-                    <!-- Headline Title -->
-                    <h2 id="canvasTextFull" class="font-extrabold text-white tracking-tight leading-snug drop-shadow-lg text-xl sm:text-2xl mb-4 text-left" style="line-height: 1.35;">
+                    <!-- Headline Title with Roboto Serif -->
+                    <h2 id="canvasTextFull" class="font-serif font-extrabold text-white tracking-tight leading-snug drop-shadow-lg text-xl sm:text-2xl mb-4 text-left" style="font-family: 'Roboto Serif', Georgia, serif; line-height: 1.35;">
                       <?= htmlspecialchars($initialTitle) ?>
                     </h2>
 
-                    <!-- Footer Meta Bar (No truncate to prevent any descender clipping!) -->
-                    <div class="pt-3 border-t border-white/25 flex items-center justify-between text-[11px] text-zinc-300" style="line-height: 1.6;">
-                      <div class="flex items-center gap-1.5 font-bold text-white tracking-wide shrink-0">
-                        <span class="text-[#CC0000] text-xs">●</span>
-                        <span>gnn.web.id</span>
+                    <!-- Footer Meta Bar (Small clean domain and photo credit) -->
+                    <div class="pt-3 border-t border-white/20 flex items-center justify-between text-[9px] text-zinc-300" style="line-height: 1.5;">
+                      <div class="flex items-center gap-1 font-normal text-zinc-300/80 tracking-tight shrink-0 text-[8.5px] sm:text-[9px]">
+                        <span class="text-[#CC0000] text-[7px]">●</span>
+                        <span>www.goodnewsnusantara.my.id</span>
                       </div>
-                      <div class="text-right text-zinc-300 font-medium pl-2 shrink-0 max-w-[65%]" style="line-height: 1.6; padding-bottom: 2px;">
-                        Kredit: <span id="canvasCreditTextFull" class="text-white font-semibold"><?= htmlspecialchars($initialCredit) ?></span>
+                      <div class="text-right text-zinc-400 font-normal pl-2 shrink-0 max-w-[65%] text-[8.5px] sm:text-[9px]" style="line-height: 1.5; padding-bottom: 2px;">
+                        Foto: <span id="canvasCreditTextFull" class="text-zinc-200 font-medium"><?= htmlspecialchars($initialCredit) ?></span>
                       </div>
                     </div>
 
@@ -951,19 +1039,19 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                   <div class="relative w-full h-[42%] bg-[#0a0a0a] flex flex-col justify-between z-10 overflow-hidden text-left"
                        style="padding-top: 20px; padding-bottom: 30px; padding-left: 24px; padding-right: 24px;">
                     <div>
-                      <h2 id="canvasTextSplit" class="font-extrabold text-white tracking-tight leading-snug drop-shadow-md text-base sm:text-lg line-clamp-4" style="line-height: 1.35;">
+                      <h2 id="canvasTextSplit" class="font-serif font-extrabold text-white tracking-tight leading-snug drop-shadow-md text-base sm:text-lg line-clamp-4" style="font-family: 'Roboto Serif', Georgia, serif; line-height: 1.35;">
                         <?= htmlspecialchars($initialTitle) ?>
                       </h2>
                     </div>
 
                     <!-- Footer Meta Bar -->
-                    <div class="pt-3 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400" style="line-height: 1.6;">
-                      <div class="flex items-center gap-1.5 font-bold text-white tracking-wide shrink-0">
-                        <span class="text-[#CC0000] text-xs">●</span>
-                        <span>gnn.web.id</span>
+                    <div class="pt-3 border-t border-zinc-800 flex items-center justify-between text-[9px] text-zinc-400" style="line-height: 1.5;">
+                      <div class="flex items-center gap-1 font-normal text-zinc-400 tracking-tight shrink-0 text-[8.5px] sm:text-[9px]">
+                        <span class="text-[#CC0000] text-[7px]">●</span>
+                        <span>www.goodnewsnusantara.my.id</span>
                       </div>
-                      <div class="text-right text-zinc-400 font-medium pl-2 shrink-0 max-w-[65%]" style="line-height: 1.6; padding-bottom: 2px;">
-                        Kredit: <span id="canvasCreditTextSplit" class="text-white font-semibold"><?= htmlspecialchars($initialCredit) ?></span>
+                      <div class="text-right text-zinc-400 font-normal pl-2 shrink-0 max-w-[65%] text-[8.5px] sm:text-[9px]" style="line-height: 1.5; padding-bottom: 2px;">
+                        Foto: <span id="canvasCreditTextSplit" class="text-zinc-300 font-medium"><?= htmlspecialchars($initialCredit) ?></span>
                       </div>
                     </div>
                   </div>
@@ -1667,7 +1755,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
               
               <!-- Large Bold Headline Title -->
               <h1 class="font-sans font-black text-2xl sm:text-3xl lg:text-4xl text-zinc-900 dark:text-zinc-100 hover:text-[#CC0000] transition leading-[1.2] tracking-tight mb-3">
-                <a href="?article=<?= urlencode($featuredArticle['id']) ?>">
+                <a href="/<?= slugify($featuredArticle['title']) ?>">
                   <?= htmlspecialchars($featuredArticle['title']) ?>
                 </a>
               </h1>
@@ -1686,7 +1774,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             </div>
 
             <!-- Large Cover Image (BELOW title, excerpt, and author line) -->
-            <a href="?article=<?= urlencode($featuredArticle['id']) ?>" class="block rounded-2xl overflow-hidden aspect-16/9 bg-zinc-100 dark:bg-zinc-800 group shadow-xs">
+            <a href="/<?= slugify($featuredArticle['title']) ?>" class="block rounded-2xl overflow-hidden aspect-16/9 bg-zinc-100 dark:bg-zinc-800 group shadow-xs">
               <img src="<?= htmlspecialchars(getSafeArticleImage($featuredArticle['image'] ?? '', $featuredArticle['category'] ?? '')) ?>" alt="<?= htmlspecialchars($featuredArticle['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-103 transition duration-500">
             </a>
           </div>
@@ -1696,12 +1784,12 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
               <?php foreach ($topNewsList as $item): ?>
                 <div class="flex items-start gap-3.5 sm:gap-4 py-3.5 first:pt-0 last:pb-0 group">
-                  <a href="?article=<?= urlencode($item['id']) ?>" class="w-28 sm:w-32 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
+                  <a href="/<?= slugify($item['title']) ?>" class="w-28 sm:w-32 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
                     <img src="<?= htmlspecialchars(getSafeArticleImage($item['image'] ?? '', $item['category'] ?? '')) ?>" alt="<?= htmlspecialchars($item['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                   </a>
                   <div class="flex-1 min-w-0">
                     <h3 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-3">
-                      <a href="?article=<?= urlencode($item['id']) ?>">
+                      <a href="/<?= slugify($item['title']) ?>">
                         <?= htmlspecialchars($item['title']) ?>
                       </a>
                     </h3>
@@ -1798,7 +1886,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
               <div class="space-y-5">
                 <?php foreach ($kabarTerkiniList as $art): ?>
                   <div class="flex items-start gap-4 sm:gap-5 pb-5 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0 group">
-                    <a href="?article=<?= urlencode($art['id']) ?>" class="w-32 sm:w-44 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
+                    <a href="/<?= slugify($art['title']) ?>" class="w-32 sm:w-44 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
                       <img src="<?= htmlspecialchars(getSafeArticleImage($art['image'] ?? '', $art['category'] ?? '')) ?>" alt="<?= htmlspecialchars($art['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                     </a>
                     <div class="flex-1 min-w-0">
@@ -1807,7 +1895,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                         <?= htmlspecialchars($art['sub_category'] ?: $art['category']) ?>
                       </span>
                       <h3 class="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 sm:line-clamp-3 mb-1.5">
-                        <a href="?article=<?= urlencode($art['id']) ?>">
+                        <a href="/<?= slugify($art['title']) ?>">
                           <?= htmlspecialchars($art['title']) ?>
                         </a>
                       </h3>
@@ -1843,7 +1931,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                 <div id="kilasScroll" class="flex gap-4 sm:gap-5 overflow-x-auto scroll-smooth py-1 px-1 scrollbar-none" style="scrollbar-width: none; -ms-overflow-style: none;">
                   <?php foreach ($kilasSportList as $sp): ?>
                     <div class="w-[260px] sm:w-[310px] rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 hover:border-[#CC0000] transition group shrink-0 flex flex-col justify-between shadow-xs">
-                      <a href="?article=<?= urlencode($sp['id']) ?>" class="block">
+                      <a href="/<?= slugify($sp['title']) ?>" class="block">
                         <div class="aspect-16/9 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative">
                           <img src="<?= htmlspecialchars(getSafeArticleImage($sp['image'] ?? '', $sp['category'] ?? '')) ?>" alt="<?= htmlspecialchars($sp['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                           <span class="absolute top-2 left-2 bg-[#CC0000]/90 text-white font-black text-[9px] px-2 py-0.5 rounded uppercase tracking-wider"><?= htmlspecialchars(strtoupper($sp['sub_category'] ?: 'OLAHRAGA')) ?></span>
@@ -1886,7 +1974,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
               <?php if (!empty($sejarahArticles)): ?>
                 <?php $topSejarah = $sejarahArticles[0]; ?>
                 <div class="mb-5 pb-5 border-b border-zinc-200 dark:border-zinc-800 group">
-                  <a href="?article=<?= urlencode($topSejarah['id']) ?>" class="block">
+                  <a href="/<?= slugify($topSejarah['title']) ?>" class="block">
                     <div class="aspect-16/9 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-3 shadow-2xs">
                       <img src="<?= htmlspecialchars(getSafeArticleImage($topSejarah['image'] ?? '', $topSejarah['category'] ?? '')) ?>" alt="<?= htmlspecialchars($topSejarah['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                     </div>
@@ -1904,7 +1992,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                   <?php foreach (array_slice($sejarahArticles, 1, 4) as $sArt): ?>
                     <div class="pb-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 group">
                       <h4 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-3 mb-1">
-                        <a href="?article=<?= urlencode($sArt['id']) ?>">
+                        <a href="/<?= slugify($sArt['title']) ?>">
                           <?= htmlspecialchars($sArt['title']) ?>
                         </a>
                       </h4>
@@ -1949,7 +2037,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             <?php foreach ($filteredArticles as $art): ?>
               <div class="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between group hover:shadow-md transition h-full">
-                <a href="?article=<?= urlencode($art['id']) ?>" class="block">
+                <a href="/<?= slugify($art['title']) ?>" class="block">
                   <div class="card-cover" style="aspect-ratio: 16 / 9;">
                     <img src="<?= htmlspecialchars(getSafeArticleImage($art['image'] ?? '', $art['category'] ?? '')) ?>" alt="<?= htmlspecialchars($art['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="group-hover:scale-105 transition duration-500">
                     <span class="absolute top-3 left-3 bg-[#CC0000] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shadow-xs">

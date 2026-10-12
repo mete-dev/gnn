@@ -493,12 +493,13 @@ $categoriesList = array_keys($navbarCategories);
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&family=Roboto+Serif:ital,opsz,wght@0,8..144,400..900;1,8..144,400..900&display=swap" rel="stylesheet">
   <?php if (!empty($googleClientId)): ?>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   <?php endif; ?>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif { font-family: 'Roboto Serif', Georgia, serif; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
