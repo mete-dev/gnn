@@ -431,6 +431,7 @@ if ($currentUser) {
     $artSql .= " ORDER BY created_at DESC";
     $stmtArt = $db->prepare($artSql);
     $stmtArt->execute($artParams);
+    $articles = $stmtArt->fetchAll();
     if ($tab === 'videos' && $searchQuery) {
         $stmtVid = $db->prepare("SELECT * FROM videos WHERE title LIKE ? OR description LIKE ? OR category LIKE ? ORDER BY created_at DESC");
         $stmtVid->execute(["%$searchQuery%", "%$searchQuery%", "%$searchQuery%"]);
