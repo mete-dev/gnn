@@ -468,7 +468,8 @@ $navbarCategories = [
     'Saintek' => ['Pendidikan', 'Teknologi', 'Sains', 'Lingkungan', 'Konservasi', 'Energi Hijau'],
     'Politik' => ['Kebijakan', 'Nasional', 'Asean', 'Internasional'],
     'Hukum' => ['Hukum', 'Kriminal', 'Investigasi'],
-    'Sosial' => ['Sosial', 'Budaya', 'Sejarah', 'Gastronomi', 'Seni & Sastra'],
+    'Sosial' => ['Sosial', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
+    'Sejarah' => ['Sejarah Nusantara', 'Kerajaan', 'Purbakala', 'Peradaban', 'Cagar Budaya'],
     'Lifestyle' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan']
 ];
 

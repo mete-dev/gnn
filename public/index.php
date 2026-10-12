@@ -213,13 +213,19 @@ if (empty($kabarTerkiniList)) {
     $kabarTerkiniList = array_slice($allArticles, 1, 5);
 }
 
-// Foto 4: Kilas (Seputar Olahraga)
+// Foto 4: Kilas (Menampilkan data dari sub kategori Olahraga)
 $kilasSportList = array_values(array_filter($allArticles, function($a) {
-    $c = strtoupper($a['category'] ?? '');
     $sc = strtolower($a['sub_category'] ?? '');
-    $t = strtolower($a['title'] ?? '');
-    return str_contains($sc, 'olahraga') || str_contains($sc, 'kilas') || str_contains($t, 'timnas') || str_contains($t, 'pssi') || str_contains($t, 'skor') || str_contains($t, 'olahraga') || str_contains($t, 'juara') || $c === 'LIFESTYLE';
+    return str_contains($sc, 'olahraga');
 }));
+if (empty($kilasSportList)) {
+    $kilasSportList = array_values(array_filter($allArticles, function($a) {
+        $c = strtoupper($a['category'] ?? '');
+        $sc = strtolower($a['sub_category'] ?? '');
+        $t = strtolower($a['title'] ?? '');
+        return str_contains($sc, 'olahraga') || str_contains($t, 'timnas') || str_contains($t, 'olahraga') || str_contains($t, 'skor') || str_contains($t, 'juara') || $c === 'LIFESTYLE';
+    }));
+}
 if (count($kilasSportList) < 2) {
     $kilasSportList = array_merge($kilasSportList, array_slice($otherArticles, 1, 3));
 }
@@ -229,7 +235,7 @@ $sejarahArticles = array_values(array_filter($allArticles, function($a) {
     $c = strtoupper($a['category'] ?? '');
     $sc = strtolower($a['sub_category'] ?? '');
     $t = strtolower($a['title'] ?? '');
-    return str_contains($sc, 'sejarah') || str_contains($c, 'SEJARAH') || str_contains($c, 'BUDAYA') || str_contains($sc, 'budaya') || str_contains($t, 'sejarah') || str_contains($t, 'majapahit') || str_contains($t, 'kerajaan') || str_contains($t, 'kuno') || str_contains($t, 'nusantara');
+    return str_contains($c, 'SEJARAH') || str_contains($sc, 'sejarah') || str_contains($t, 'sejarah') || str_contains($t, 'majapahit') || str_contains($t, 'kerajaan') || str_contains($t, 'kuno') || str_contains($t, 'nusantara') || str_contains($c, 'BUDAYA');
 }));
 if (count($sejarahArticles) < 3) {
     $sejarahArticles = array_merge($sejarahArticles, array_slice($allArticles, 0, 4));
@@ -461,7 +467,8 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             ['name' => 'Saintek', 'subs' => ['Pendidikan', 'Teknologi', 'Sains', 'Lingkungan', 'Konservasi', 'Energi Hijau']],
             ['name' => 'Politik', 'subs' => ['Kebijakan', 'Nasional', 'Asean', 'Internasional']],
             ['name' => 'Hukum', 'subs' => ['Hukum', 'Kriminal', 'Investigasi']],
-            ['name' => 'Sosial', 'subs' => ['Sosial', 'Budaya', 'Sejarah', 'Gastronomi', 'Seni & Sastra']],
+            ['name' => 'Sosial', 'subs' => ['Sosial', 'Budaya', 'Gastronomi', 'Seni & Sastra']],
+            ['name' => 'Sejarah', 'subs' => ['Sejarah Nusantara', 'Kerajaan', 'Purbakala', 'Peradaban', 'Cagar Budaya']],
             ['name' => 'Lifestyle', 'subs' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan']]
         ];
 
@@ -1813,16 +1820,15 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
               </div>
             </div>
 
-            <!-- FOTO 4: KILAS (BERITA SEPUTAR OLAHRAGA) -->
+            <!-- FOTO 4: KILAS (MENAMPILKAN DATA DARI SUB KATEGORI OLAHRAGA) -->
             <div class="pt-2">
               <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-100 dark:border-zinc-800">
                 <div class="flex items-center gap-2">
                   <h2 class="font-sans font-black text-xl sm:text-2xl text-zinc-900 dark:text-zinc-100 tracking-tight">
                     Kilas
                   </h2>
-                  <span class="text-xs font-semibold text-zinc-400">(Seputar Olahraga)</span>
                 </div>
-                <a href="?category=LIFESTYLE" class="text-[#CC0000] font-bold text-xs sm:text-sm hover:underline">
+                <a href="?q=Olahraga" class="text-[#CC0000] font-bold text-xs sm:text-sm hover:underline">
                   Indeks
                 </a>
               </div>
@@ -1840,11 +1846,11 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                       <a href="?article=<?= urlencode($sp['id']) ?>" class="block">
                         <div class="aspect-16/9 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative">
                           <img src="<?= htmlspecialchars(getSafeArticleImage($sp['image'] ?? '', $sp['category'] ?? '')) ?>" alt="<?= htmlspecialchars($sp['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                          <span class="absolute top-2 left-2 bg-[#CC0000]/90 text-white font-black text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">GNN SPORT</span>
+                          <span class="absolute top-2 left-2 bg-[#CC0000]/90 text-white font-black text-[9px] px-2 py-0.5 rounded uppercase tracking-wider"><?= htmlspecialchars(strtoupper($sp['sub_category'] ?: 'OLAHRAGA')) ?></span>
                         </div>
                         <div class="p-4">
-                          <!-- Category KILAS -->
-                          <span class="text-[#CC0000] font-black text-[10px] uppercase tracking-wider block mb-1">KILAS</span>
+                          <!-- Sub Category Badge -->
+                          <span class="text-[#CC0000] font-black text-[10px] uppercase tracking-wider block mb-1"><?= htmlspecialchars(strtoupper($sp['sub_category'] ?: 'OLAHRAGA')) ?></span>
                           <!-- Red Title (Matching Foto 4) -->
                           <h3 class="font-bold text-xs sm:text-sm text-[#CC0000] group-hover:text-red-700 leading-snug line-clamp-3">
                             <?= htmlspecialchars($sp['title']) ?>
