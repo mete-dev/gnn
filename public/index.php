@@ -34,10 +34,22 @@ function slugify($text) {
     return empty($text) ? 'artikel' : $text;
 }
 
-function getSafeArticleImage($img, $category = '') {
+function getSafeArticleImage($img, $category = '', $articleId = '') {
     $img = trim($img ?? '');
-    if (!empty($img) && strlen($img) > 5) {
-        return $img;
+    
+    // If it's a Base64 Data URL, return the direct cover endpoint so social media scrapers get a real image URL
+    if (str_starts_with($img, 'data:image/') && !empty($articleId)) {
+        return 'https://gnn.web.id/api/cover.php?id=' . urlencode($articleId);
+    }
+
+    if (!empty($img) && strlen($img) > 5 && !str_starts_with($img, 'data:image/')) {
+        if (preg_match('#^https?://#i', $img)) {
+            return $img;
+        }
+        if (str_starts_with($img, '/')) {
+            return 'https://gnn.web.id' . $img;
+        }
+        return 'https://gnn.web.id/' . $img;
     }
     $defaults = [
         'EKONOMI' => 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
@@ -298,21 +310,44 @@ if (count($sejarahArticles) < 3) {
     $sejarahArticles = array_merge($sejarahArticles, array_slice($allArticles, 0, 4));
 }
 
-// SEO Details
+// SEO & Social Media Details
 $pageTitle = "Good News Nusantara | Jadi Tahu Indonesia";
 $pageDesc = "Good News Nusantara - Berita Positif Nusantara & Jadi Tahu Indonesia. Media informasi kabar baik terpercaya, inovasi lokal anak bangsa, prestasi, kisah inspiratif, budaya, pariwisata, dan potensi kekayaan Indonesia demi membangun optimisme bangsa.";
 $pageImage = "https://gnn.web.id/icon/og-image.png";
 $pageUrl = "https://gnn.web.id/";
+$articlePublishedTime = "";
+$articleModifiedTime = "";
+$articleAuthor = "Redaksi Good News Nusantara";
+$articleCategory = "KABAR BAIK";
+$rawHeadline = "Good News Nusantara | Jadi Tahu Indonesia";
 
 if ($article) {
-    $pageTitle = htmlspecialchars($article['title']) . " - Good News Nusantara | Jadi Tahu Indonesia";
-    $pageDesc = mb_substr(strip_tags($article['content']), 0, 160) . '...';
-    $pageImage = $article['image'] ?: $pageImage;
+    $rawHeadline = trim(strip_tags($article['title'] ?? ''));
+    $pageTitle = $rawHeadline . " - Good News Nusantara | Jadi Tahu Indonesia";
+    
+    // Clean excerpt for social shares (WhatsApp, Facebook, Twitter, Threads)
+    $rawContent = strip_tags(html_entity_decode($article['content'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $cleanDesc = trim(preg_replace('/\s+/', ' ', $rawContent));
+    if (empty($cleanDesc)) {
+        $cleanDesc = "Baca ulasan lengkap kabar baik dan inspiratif nusantara ini hanya di Good News Nusantara - Jadi Tahu Indonesia.";
+    }
+    $pageDesc = mb_substr($cleanDesc, 0, 160) . (mb_strlen($cleanDesc) > 160 ? '...' : '');
+    
+    // Safe Absolute Image URL (WhatsApp/Facebook require full https:// URL)
+    $pageImage = getSafeArticleImage($article['image'] ?? '', $article['category'] ?? '', $article['id'] ?? '');
+    
+    // Canonical Article URL
     $pageUrl = "https://gnn.web.id/" . slugify($article['title']);
+    
+    // Article Metadata
+    $articlePublishedTime = !empty($article['created_at']) ? date('c', strtotime($article['created_at'])) : date('c');
+    $articleModifiedTime = !empty($article['updated_at']) ? date('c', strtotime($article['updated_at'])) : $articlePublishedTime;
+    $articleAuthor = !empty($article['author']) ? trim($article['author']) : 'Redaksi Good News Nusantara';
+    $articleCategory = !empty($article['category']) ? trim($article['category']) : 'KABAR BAIK';
 } elseif ($categoryParam) {
-    $pageTitle = "Kategori " . htmlspecialchars($categoryParam) . " - Good News Nusantara | Jadi Tahu Indonesia";
+    $pageTitle = "Kategori " . htmlspecialchars($categoryParam, ENT_QUOTES, 'UTF-8') . " - Good News Nusantara | Jadi Tahu Indonesia";
 } elseif ($queryParam) {
-    $pageTitle = "Pencarian: " . htmlspecialchars($queryParam) . " - Good News Nusantara | Jadi Tahu Indonesia";
+    $pageTitle = "Pencarian: " . htmlspecialchars($queryParam, ENT_QUOTES, 'UTF-8') . " - Good News Nusantara | Jadi Tahu Indonesia";
 } elseif ($viewParam === 'tv') {
     $pageTitle = "GNN TV & Video Nusantara - Good News Nusantara | Jadi Tahu Indonesia";
 } elseif ($viewParam === 'gallery') {
@@ -331,6 +366,14 @@ if ($article) {
     $pageTitle = "Kontak Iklan & Kerjasama - Good News Nusantara | Jadi Tahu Indonesia";
 }
 
+// Detect image mime type for og:image:type
+$imageMime = 'image/jpeg';
+if (preg_match('#\.(png)(\?.*)?$#i', $pageImage)) {
+    $imageMime = 'image/png';
+} elseif (preg_match('#\.(webp)(\?.*)?$#i', $pageImage)) {
+    $imageMime = 'image/webp';
+}
+
 $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI', 'EKONOMI', 'PENDIDIKAN', 'LINGKUNGAN'];
 ?>
 <!doctype html>
@@ -338,16 +381,16 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><?= $pageTitle ?></title>
+  <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
 
   <!-- Google Verification & Indexing -->
   <meta name="google-site-verification" content="google347822a2c05e18bd" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="author" content="Redaksi Good News Nusantara" />
-  <link rel="canonical" href="<?= $pageUrl ?>" />
+  <link rel="canonical" href="<?= htmlspecialchars($pageUrl, ENT_QUOTES, 'UTF-8') ?>" />
 
   <!-- 20 Kata Kunci Strategis SEO GNN -->
-  <meta name="description" content="<?= htmlspecialchars($pageDesc) ?>" />
+  <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>" />
   <meta name="keywords" content="Good News Nusantara, GNN Indonesia, Berita Positif Nusantara, Kabar Baik Indonesia, Kabar baik daerah Indonesia, Inovasi lokal anak bangsa, Prestasi Indonesia terbaru, Kisah inspiratif Nusantara, Pembangunan daerah positif, Kabar baik dari pelosok negeri, Jadi Tahu Indonesia, Optimisme bangsa Indonesia, Media informasi positif Indonesia, Kabar inspiratif pemuda, Potensi dan kekayaan Indonesia, Budaya dan pariwisata Nusantara, Karya anak bangsa inspiratif, Teknologi dan sains lokal Indonesia, UMKM dan ekonomi kreatif Indonesia, Seni dan tradisi Nusantara" />
 
   <!-- Favicon -->
@@ -355,21 +398,41 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
   <link rel="apple-touch-icon" href="/icon/favicon.png" />
   <meta name="theme-color" content="#CC0000" />
 
-  <!-- Open Graph / WhatsApp / Facebook -->
+  <!-- Open Graph / WhatsApp / Facebook / Instagram / Threads -->
   <meta property="og:site_name" content="Good News Nusantara" />
-  <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>" />
-  <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>" />
+  <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta property="og:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>" />
   <meta property="og:type" content="<?= $article ? 'article' : 'website' ?>" />
-  <meta property="og:url" content="<?= $pageUrl ?>" />
-  <meta property="og:image" content="<?= $pageImage ?>" />
+  <meta property="og:url" content="<?= htmlspecialchars($pageUrl, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta property="og:image" content="<?= htmlspecialchars($pageImage, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta property="og:image:secure_url" content="<?= htmlspecialchars($pageImage, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="<?= $imageMime ?>" />
+  <meta property="og:image:alt" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
   <meta property="og:locale" content="id_ID" />
+  <?php if ($article): ?>
+  <meta property="article:published_time" content="<?= $articlePublishedTime ?>" />
+  <meta property="article:modified_time" content="<?= $articleModifiedTime ?>" />
+  <meta property="article:author" content="<?= htmlspecialchars($articleAuthor, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta property="article:section" content="<?= htmlspecialchars($articleCategory, ENT_QUOTES, 'UTF-8') ?>" />
+  <?php endif; ?>
 
-  <!-- Twitter Card -->
+  <!-- Twitter / X Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@gnn_id" />
-  <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle) ?>" />
-  <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc) ?>" />
-  <meta name="twitter:image" content="<?= $pageImage ?>" />
+  <meta name="twitter:creator" content="@gnn_id" />
+  <meta name="twitter:url" content="<?= htmlspecialchars($pageUrl, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta name="twitter:image" content="<?= htmlspecialchars($pageImage, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta name="twitter:image:alt" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+
+  <!-- Direct Image Fallbacks for WhatsApp Scraper -->
+  <link rel="image_src" href="<?= htmlspecialchars($pageImage, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta itemprop="name" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta itemprop="description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>" />
+  <meta itemprop="image" content="<?= htmlspecialchars($pageImage, ENT_QUOTES, 'UTF-8') ?>" />
 
   <!-- Schema.org JSON-LD -->
   <script type="application/ld+json">
@@ -396,13 +459,13 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
       <?php if ($article): ?>,
       {
         "@type": "NewsArticle",
-        "headline": "<?= addslashes($article['title']) ?>",
-        "image": ["<?= $article['image'] ?>"],
-        "datePublished": "<?= $article['created_at'] ?>",
-        "dateModified": "<?= $article['updated_at'] ?: $article['created_at'] ?>",
+        "headline": <?= json_encode($rawHeadline, JSON_UNESCAPED_UNICODE) ?>,
+        "image": [<?= json_encode($pageImage, JSON_UNESCAPED_SLASHES) ?>],
+        "datePublished": "<?= $articlePublishedTime ?>",
+        "dateModified": "<?= $articleModifiedTime ?>",
         "author": {
           "@type": "Person",
-          "name": "<?= addslashes($article['author'] ?: 'Redaksi GNN') ?>"
+          "name": <?= json_encode($articleAuthor, JSON_UNESCAPED_UNICODE) ?>
         },
         "publisher": {
           "@type": "Organization",
@@ -411,6 +474,11 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             "@type": "ImageObject",
             "url": "https://gnn.web.id/icon/logow.png"
           }
+        },
+        "description": <?= json_encode($pageDesc, JSON_UNESCAPED_UNICODE) ?>,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": <?= json_encode($pageUrl, JSON_UNESCAPED_SLASHES) ?>
         }
       }
       <?php endif; ?>
