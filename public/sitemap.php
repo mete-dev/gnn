@@ -75,18 +75,28 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
   <!-- Dynamic Articles from Database -->
   <?php
+  function sitemapSlugify($text) {
+      $text = preg_replace('~[^\pL\d]+~u', '-', $text ?? '');
+      $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+      $text = preg_replace('~[^-\w]+~', '', $text);
+      $text = trim($text, '-');
+      $text = preg_replace('~-+~', '-', $text);
+      $text = strtolower($text);
+      return empty($text) ? 'artikel' : $text;
+  }
+
   foreach ($articles as $art):
     $status = strtolower($art['status'] ?? 'publish');
     if ($status === 'draft') continue;
 
     $dateRaw = $art['updated_at'] ?: $art['created_at'] ?: date('Y-m-d');
-    $lastmod = date('Y-m-d', strtotime($dateRaw));
-    $artUrl = $baseUrl . '/?article=' . urlencode($art['id']);
+    $lastmod = date('c', strtotime($dateRaw));
+    $artUrl = $baseUrl . '/' . sitemapSlugify($art['title']);
   ?>
   <url>
     <loc><?= htmlspecialchars($artUrl) ?></loc>
     <lastmod><?= $lastmod ?></lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <?php endforeach; ?>
