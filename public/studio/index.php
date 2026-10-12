@@ -90,24 +90,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
 
         if ($passValid && $user) {
-            $userRole = $user['role'] ?? 'sahabat';
-            if (strtolower($user['email']) === 'fadhilalanshor511@gmail.com' || strtolower($user['email']) === 'admin@gnn.my.id' || strtolower($user['username']) === 'admin') {
-                $userRole = 'admin';
-                try {
-                    $db->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$user['id']]);
-                } catch (Exception $e) {}
-            }
+            $userStatus = strtolower($user['status'] ?? 'active');
+            if ($userStatus === 'blocked') {
+                $err = "Akses akun Anda telah diblokir. Silakan hubungi Administrator.";
+            } elseif ($userStatus === 'inactive') {
+                $err = "Akun Anda sedang dinonaktifkan. Silakan hubungi Administrator.";
+            } else {
+                $userRole = $user['role'] ?? 'sahabat';
+                if (strtolower($user['email']) === 'fadhilalanshor511@gmail.com' || strtolower($user['email']) === 'admin@gnn.my.id' || strtolower($user['username']) === 'admin') {
+                    $userRole = 'admin';
+                    try {
+                        $db->prepare("UPDATE users SET role = 'admin', status = 'active' WHERE id = ?")->execute([$user['id']]);
+                    } catch (Exception $e) {}
+                }
 
-            $_SESSION['gnn_user'] = [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'username' => $user['username'],
-                'email' => $user['email'],
-                'role' => $userRole,
-                'avatar' => $user['avatar'] ?? ''
-            ];
-            header("Location: /studio/");
-            exit();
+                $_SESSION['gnn_user'] = [
+                    'id' => $user['id'],
+                    'name' => $user['name'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'role' => $userRole,
+                    'avatar' => $user['avatar'] ?? ''
+                ];
+                header("Location: /studio/");
+                exit();
+            }
         } else {
             $err = "Username atau kata sandi tidak cocok.";
         }
@@ -227,17 +234,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
 
             if ($user) {
-                $finalRole = $isAdminEmail ? 'admin' : ($user['role'] ?? 'sahabat');
-                $_SESSION['gnn_user'] = [
-                    'id' => $user['id'],
-                    'name' => $user['name'],
-                    'username' => $user['username'],
-                    'email' => $user['email'],
-                    'role' => $finalRole,
-                    'avatar' => $user['avatar'] ?? $avatar
-                ];
-                header("Location: /studio/");
-                exit();
+                $userStatus = strtolower($user['status'] ?? 'active');
+                if ($userStatus === 'blocked') {
+                    $err = "Akses akun Anda telah diblokir. Silakan hubungi Administrator.";
+                } elseif ($userStatus === 'inactive') {
+                    $err = "Akun Anda sedang dinonaktifkan. Silakan hubungi Administrator.";
+                } else {
+                    $finalRole = $isAdminEmail ? 'admin' : ($user['role'] ?? 'sahabat');
+                    $_SESSION['gnn_user'] = [
+                        'id' => $user['id'],
+                        'name' => $user['name'],
+                        'username' => $user['username'],
+                        'email' => $user['email'],
+                        'role' => $finalRole,
+                        'avatar' => $user['avatar'] ?? $avatar
+                    ];
+                    header("Location: /studio/");
+                    exit();
+                }
             } else {
                 $err = "Gagal memproses data pengguna.";
             }
@@ -551,6 +565,91 @@ if ($currentUser) {
                 $stmtRole->execute([$newRole, $targetUserId]);
                 $msg = "Peran pengguna berhasil diubah menjadi " . strtoupper($newRole) . "!";
             }
+        }
+    }
+
+    // Update User Status: Aktif / Nonaktifkan / Blokir Akses (Admin only)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_user_status') {
+        if (($currentUser['role'] ?? '') === 'admin') {
+            $targetUserId = trim($_POST['user_id'] ?? '');
+            $newStatus = strtolower(trim($_POST['new_status'] ?? 'active'));
+            if (in_array($newStatus, ['active', 'inactive', 'blocked']) && $targetUserId) {
+                $stmtCheck = $db->prepare("SELECT email FROM users WHERE id = ?");
+                $stmtCheck->execute([$targetUserId]);
+                $targetUser = $stmtCheck->fetch();
+                $targetEmail = strtolower($targetUser['email'] ?? '');
+
+                if ($targetUserId === ($currentUser['id'] ?? '')) {
+                    $err = "Anda tidak dapat mengubah status akun Anda sendiri.";
+                } elseif ($targetEmail === 'fadhilalanshor511@gmail.com' || $targetEmail === 'admin@gnn.my.id') {
+                    $err = "Akun Administrator Utama tidak dapat dinonaktifkan atau diblokir.";
+                } else {
+                    $stmtStatus = $db->prepare("UPDATE users SET status = ? WHERE id = ?");
+                    $stmtStatus->execute([$newStatus, $targetUserId]);
+                    $labelStatus = [
+                        'active' => 'diaktifkan kembali',
+                        'inactive' => 'dinonaktifkan',
+                        'blocked' => 'diblokir aksesnya'
+                    ][$newStatus] ?? 'diperbarui';
+                    $msg = "Status pengguna berhasil " . $labelStatus . "!";
+                }
+            }
+        } else {
+            $err = "Akses ditolak. Hanya Administrator yang dapat mengubah status pengguna.";
+        }
+    }
+
+    // Reset User Password (Admin only)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_user_password') {
+        if (($currentUser['role'] ?? '') === 'admin') {
+            $targetUserId = trim($_POST['user_id'] ?? '');
+            $newPassword = trim($_POST['new_password'] ?? '');
+
+            if (!$targetUserId || strlen($newPassword) < 6) {
+                $err = "Kata sandi baru minimal harus 6 karakter.";
+            } else {
+                $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+                $stmtReset = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmtReset->execute([$hash, $targetUserId]);
+                $msg = "Kata sandi pengguna berhasil direset!";
+            }
+        } else {
+            $err = "Akses ditolak. Hanya Administrator yang dapat mereset kata sandi pengguna.";
+        }
+    }
+
+    // Admin Update User Data (Admin only)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'admin_update_user') {
+        if (($currentUser['role'] ?? '') === 'admin') {
+            $targetUserId = trim($_POST['user_id'] ?? '');
+            $name = trim($_POST['name'] ?? '');
+            $username = strtolower(trim($_POST['username'] ?? ''));
+            $email = strtolower(trim($_POST['email'] ?? ''));
+            $role = trim($_POST['role'] ?? 'sahabat');
+            $status = strtolower(trim($_POST['status'] ?? 'active'));
+            $whatsapp = trim($_POST['whatsapp'] ?? '');
+
+            if (!$targetUserId || !$name || !$username || !$email) {
+                $err = "Nama, Username, dan Email wajib diisi.";
+            } else {
+                $stmtDup = $db->prepare("SELECT id FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND id != ?");
+                $stmtDup->execute([$email, $username, $targetUserId]);
+                if ($stmtDup->fetch()) {
+                    $err = "Email atau Username sudah digunakan pengguna lain.";
+                } else {
+                    if (($email === 'fadhilalanshor511@gmail.com' || $email === 'admin@gnn.my.id') && $role !== 'admin') {
+                        $role = 'admin';
+                    }
+                    if (($email === 'fadhilalanshor511@gmail.com' || $email === 'admin@gnn.my.id') && $status !== 'active') {
+                        $status = 'active';
+                    }
+                    $stmtUpd = $db->prepare("UPDATE users SET name = ?, username = ?, email = ?, role = ?, status = ?, whatsapp = ? WHERE id = ?");
+                    $stmtUpd->execute([$name, $username, $email, $role, $status, $whatsapp, $targetUserId]);
+                    $msg = "Data pengguna berhasil diperbarui!";
+                }
+            }
+        } else {
+            $err = "Akses ditolak. Hanya Administrator yang dapat mengubah data pengguna.";
         }
     }
 }
@@ -2100,57 +2199,294 @@ $categoriesList = array_keys($navbarCategories);
               </div>
 
               <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-zinc-700">
+                <table class="w-full text-left text-xs text-zinc-700 whitespace-nowrap">
                   <thead>
                     <tr class="border-b border-zinc-100 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                      <th class="pb-3 px-2">Nama Pengguna</th>
-                      <th class="pb-3 px-2">Username</th>
-                      <th class="pb-3 px-2">Email</th>
-                      <th class="pb-3 px-2">Peran (Role)</th>
-                      <th class="pb-3 px-2">Status</th>
+                      <th class="pb-3 px-3">Nama Pengguna</th>
+                      <th class="pb-3 px-3">Username</th>
+                      <th class="pb-3 px-3">Email</th>
+                      <th class="pb-3 px-3">Peran (Role)</th>
+                      <th class="pb-3 px-3">Status</th>
+                      <th class="pb-3 px-3 text-right">Aksi Manajemen</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-zinc-100">
                     <?php foreach ($users as $u): ?>
+                      <?php
+                        $uStatus = strtolower($u['status'] ?? 'active');
+                        $isSuperAdmin = in_array(strtolower($u['email'] ?? ''), ['fadhilalanshor511@gmail.com', 'admin@gnn.my.id']);
+                        $isSelf = ($u['id'] === ($currentUser['id'] ?? ''));
+                        $userSafeJson = htmlspecialchars(json_encode([
+                          'id' => $u['id'],
+                          'name' => $u['name'],
+                          'username' => $u['username'],
+                          'email' => $u['email'],
+                          'role' => $u['role'] ?? 'sahabat',
+                          'status' => $uStatus,
+                          'avatar' => $u['avatar'] ?? '',
+                          'whatsapp' => $u['whatsapp'] ?? '',
+                          'gender' => $u['gender'] ?? '',
+                          'birth_date' => $u['birth_date'] ?? '',
+                          'country' => $u['country'] ?? '',
+                          'province' => $u['province'] ?? '',
+                          'city' => $u['city'] ?? '',
+                          'address' => $u['address'] ?? '',
+                          'created_at' => $u['created_at'] ?? ''
+                        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
+                      ?>
                       <tr class="hover:bg-zinc-50/70 transition">
-                        <td class="py-3 px-2 font-bold text-zinc-900 flex items-center gap-3">
-                          <?php if (!empty($u['avatar'])): ?>
-                            <img src="<?= htmlspecialchars($u['avatar']) ?>" class="w-8 h-8 rounded-full object-cover">
-                          <?php else: ?>
-                            <div class="w-8 h-8 rounded-full bg-zinc-100 text-zinc-500 font-bold flex items-center justify-center text-xs">
-                              <?= strtoupper(substr($u['name'] ?: 'U', 0, 1)) ?>
+                        <td class="py-3.5 px-3 font-bold text-zinc-900">
+                          <div class="flex items-center gap-3">
+                            <?php if (!empty($u['avatar'])): ?>
+                              <img src="<?= htmlspecialchars($u['avatar']) ?>" class="w-8 h-8 rounded-full object-cover border border-zinc-200">
+                            <?php else: ?>
+                              <div class="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 font-bold flex items-center justify-center text-xs border border-zinc-200">
+                                <?= strtoupper(substr($u['name'] ?: 'U', 0, 1)) ?>
+                              </div>
+                            <?php endif; ?>
+                            <div>
+                              <div><?= htmlspecialchars($u['name']) ?></div>
+                              <?php if ($isSuperAdmin): ?>
+                                <span class="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Super Admin</span>
+                              <?php elseif ($isSelf): ?>
+                                <span class="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">Akun Anda</span>
+                              <?php endif; ?>
                             </div>
-                          <?php endif; ?>
-                          <span><?= htmlspecialchars($u['name']) ?></span>
+                          </div>
                         </td>
-                        <td class="py-3 px-2 text-zinc-500">@<?= htmlspecialchars($u['username']) ?></td>
-                        <td class="py-3 px-2 text-zinc-500"><?= htmlspecialchars($u['email']) ?></td>
-                        <td class="py-3 px-2">
-                          <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
-                            <form method="POST" action="" class="inline-flex items-center gap-1.5">
-                              <input type="hidden" name="action" value="update_user_role">
-                              <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
-                              <select name="new_role" onchange="this.form.submit()" class="px-2 py-1 rounded-lg font-bold text-[10px] uppercase cursor-pointer border <?= $u['role'] === 'admin' ? 'bg-red-50 text-[#CC0000] border-red-200' : ($u['role'] === 'reviewer' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200') ?>">
-                                <option value="sahabat" <?= ($u['role'] ?? '') === 'sahabat' ? 'selected' : '' ?>>SAHABAT</option>
-                                <option value="reviewer" <?= ($u['role'] ?? '') === 'reviewer' ? 'selected' : '' ?>>REVIEWER</option>
-                                <option value="admin" <?= ($u['role'] ?? '') === 'admin' ? 'selected' : '' ?>>ADMIN</option>
-                              </select>
-                            </form>
+                        <td class="py-3.5 px-3 text-zinc-500 font-mono text-[11px]">@<?= htmlspecialchars($u['username']) ?></td>
+                        <td class="py-3.5 px-3 text-zinc-500"><?= htmlspecialchars($u['email']) ?></td>
+                        <td class="py-3.5 px-3">
+                          <span class="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase border <?= $u['role'] === 'admin' ? 'bg-red-50 text-[#CC0000] border-red-200' : ($u['role'] === 'reviewer' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200') ?>">
+                            <?= htmlspecialchars($u['role']) ?>
+                          </span>
+                        </td>
+                        <td class="py-3.5 px-3">
+                          <?php if ($uStatus === 'active'): ?>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-[10px] uppercase">
+                              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                            </span>
+                          <?php elseif ($uStatus === 'inactive'): ?>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold text-[10px] uppercase">
+                              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Nonaktif
+                            </span>
+                          <?php elseif ($uStatus === 'blocked'): ?>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full font-bold text-[10px] uppercase">
+                              <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Diblokir
+                            </span>
                           <?php else: ?>
-                            <span class="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase border <?= $u['role'] === 'admin' ? 'bg-red-50 text-[#CC0000] border-red-200' : ($u['role'] === 'reviewer' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200') ?>">
-                              <?= htmlspecialchars($u['role']) ?>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-50 text-zinc-700 border border-zinc-200 rounded-full font-bold text-[10px] uppercase">
+                              <?= htmlspecialchars($uStatus) ?>
                             </span>
                           <?php endif; ?>
                         </td>
-                        <td class="py-3 px-2">
-                          <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold text-[10px] uppercase">
-                            <?= htmlspecialchars($u['status'] ?? 'ACTIVE') ?>
-                          </span>
+                        <td class="py-3.5 px-3 text-right">
+                          <div class="inline-flex items-center gap-1.5 justify-end">
+                            <!-- Tombol Lihat Info -->
+                            <button type="button" onclick='openModalUserInfo(<?= $userSafeJson ?>)' class="px-2 py-1 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg border border-zinc-200 transition inline-flex items-center gap-1 text-[11px] font-bold" title="Lihat Info Lengkap">
+                              <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                              <span>Info</span>
+                            </button>
+
+                            <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
+                              <!-- Tombol Edit Data -->
+                              <button type="button" onclick='openModalUserEdit(<?= $userSafeJson ?>)' class="px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg border border-blue-200 transition inline-flex items-center gap-1 text-[11px] font-bold" title="Edit Data Pengguna">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <span>Edit</span>
+                              </button>
+
+                              <!-- Tombol Reset Sandi -->
+                              <button type="button" onclick='openModalUserReset(<?= $userSafeJson ?>)' class="px-2 py-1 text-amber-700 hover:text-amber-900 hover:bg-amber-50 rounded-lg border border-amber-200 transition inline-flex items-center gap-1 text-[11px] font-bold" title="Reset Kata Sandi">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                <span>Sandi</span>
+                              </button>
+
+                              <!-- Status Selector: Aktif / Nonaktifkan / Blokir -->
+                              <?php if (!$isSuperAdmin && !$isSelf): ?>
+                                <form method="POST" action="" class="inline-block">
+                                  <input type="hidden" name="action" value="update_user_status">
+                                  <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
+                                  <select name="new_status" onchange="if(confirm('Ubah status akun @<?= htmlspecialchars($u['username']) ?> menjadi ' + this.options[this.selectedIndex].text + '?')) this.form.submit(); else this.value='<?= $uStatus ?>';" class="px-2 py-1 text-[11px] font-bold rounded-lg border cursor-pointer outline-none transition <?= $uStatus === 'active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : ($uStatus === 'inactive' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-rose-50 text-rose-800 border-rose-200') ?>">
+                                    <option value="active" <?= $uStatus === 'active' ? 'selected' : '' ?>>🟢 Aktif</option>
+                                    <option value="inactive" <?= $uStatus === 'inactive' ? 'selected' : '' ?>>🟡 Nonaktifkan</option>
+                                    <option value="blocked" <?= $uStatus === 'blocked' ? 'selected' : '' ?>>🔴 Blokir Akses</option>
+                                  </select>
+                                </form>
+                              <?php endif; ?>
+                            <?php endif; ?>
+                          </div>
                         </td>
                       </tr>
                     <?php endforeach; ?>
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            <!-- MODAL: LIHAT INFO PENGGUNA -->
+            <div id="modalUserInfo" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+              <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
+                  <h3 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span>Informasi Lengkap Pengguna</span>
+                  </h3>
+                  <button type="button" onclick="document.getElementById('modalUserInfo').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Profil Singkat Header -->
+                  <div class="flex items-center gap-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+                    <img id="infoAvatar" src="" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-xs hidden">
+                    <div id="infoAvatarFallback" class="w-14 h-14 rounded-full bg-blue-100 text-blue-700 font-extrabold text-xl flex items-center justify-center border-2 border-white shadow-xs">U</div>
+                    <div>
+                      <h4 id="infoName" class="font-extrabold text-base text-zinc-900">-</h4>
+                      <p id="infoUsername" class="text-xs text-zinc-500 font-mono">-</p>
+                      <div class="flex items-center gap-2 mt-1.5">
+                        <span id="infoRole" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">-</span>
+                        <span id="infoStatus" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">-</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Grid Informasi Detail -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Email</span>
+                      <span id="infoEmail" class="font-semibold text-zinc-900 break-all">-</span>
+                    </div>
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">WhatsApp / No. HP</span>
+                      <span id="infoWhatsapp" class="font-semibold text-zinc-900">-</span>
+                    </div>
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Jenis Kelamin</span>
+                      <span id="infoGender" class="font-semibold text-zinc-900">-</span>
+                    </div>
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Tanggal Lahir</span>
+                      <span id="infoBirthDate" class="font-semibold text-zinc-900">-</span>
+                    </div>
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100 sm:col-span-2">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Daerah / Lokasi</span>
+                      <span id="infoLocation" class="font-semibold text-zinc-900">-</span>
+                    </div>
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100 sm:col-span-2">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Alamat Domisili</span>
+                      <span id="infoAddress" class="font-semibold text-zinc-900">-</span>
+                    </div>
+                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100 sm:col-span-2">
+                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Waktu Terdaftar</span>
+                      <span id="infoCreatedAt" class="font-semibold text-zinc-900">-</span>
+                    </div>
+                  </div>
+
+                  <div class="pt-3 flex justify-end">
+                    <button type="button" onclick="document.getElementById('modalUserInfo').classList.add('hidden')" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-900 text-white font-bold text-xs rounded-full transition">
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODAL: EDIT DATA PENGGUNA -->
+            <div id="modalUserEdit" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+              <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
+                  <h3 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Edit Data Pengguna</span>
+                  </h3>
+                  <button type="button" onclick="document.getElementById('modalUserEdit').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg">&times;</button>
+                </div>
+
+                <form method="POST" action="" class="space-y-3.5">
+                  <input type="hidden" name="action" value="admin_update_user">
+                  <input type="hidden" name="user_id" id="editUserId">
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Nama Lengkap *</label>
+                    <input type="text" name="name" id="editUserName" required class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Username *</label>
+                    <input type="text" name="username" id="editUserUsername" required class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-mono">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Email *</label>
+                    <input type="email" name="email" id="editUserEmail" required class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">No. WhatsApp</label>
+                    <input type="text" name="whatsapp" id="editUserWhatsapp" placeholder="08xxxxxxxxxx" class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none">
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Peran (Role)</label>
+                      <select name="role" id="editUserRole" class="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-bold bg-white cursor-pointer">
+                        <option value="sahabat">SAHABAT</option>
+                        <option value="reviewer">REVIEWER</option>
+                        <option value="admin">ADMIN</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Status Akun</label>
+                      <select name="status" id="editUserStatus" class="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-bold bg-white cursor-pointer">
+                        <option value="active">🟢 AKTIF</option>
+                        <option value="inactive">🟡 NONAKTIF</option>
+                        <option value="blocked">🔴 DIBLOKIR</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="pt-4 flex justify-end gap-2 border-t border-zinc-100">
+                    <button type="button" onclick="document.getElementById('modalUserEdit').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-700">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full shadow-xs transition">
+                      Simpan Perubahan
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- MODAL: RESET KATA SANDI -->
+            <div id="modalUserResetPassword" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+              <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
+                  <h3 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    <span>Reset Kata Sandi</span>
+                  </h3>
+                  <button type="button" onclick="document.getElementById('modalUserResetPassword').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg">&times;</button>
+                </div>
+
+                <form method="POST" action="" class="space-y-4">
+                  <input type="hidden" name="action" value="reset_user_password">
+                  <input type="hidden" name="user_id" id="resetUserId">
+
+                  <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
+                    Mereset kata sandi untuk akun:
+                    <strong id="resetUserDisplayName" class="block font-bold mt-0.5 text-zinc-900">-</strong>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Kata Sandi Baru *</label>
+                    <input type="password" name="new_password" id="resetNewPassword" required minlength="6" placeholder="Minimal 6 karakter..." class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-amber-600 outline-none">
+                    <p class="text-[11px] text-zinc-400 mt-1">Pengguna dapat langsung menggunakan sandi baru ini untuk login.</p>
+                  </div>
+
+                  <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modalUserResetPassword').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-700">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-full shadow-xs transition">
+                      Reset Sandi Sekarang
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
 
@@ -2251,29 +2587,6 @@ $categoriesList = array_keys($navbarCategories);
                 </form>
               </div>
 
-              <!-- SECTION 3: PENGATURAN GOOGLE CLIENT ID -->
-              <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-5 sm:p-8">
-                <h3 class="font-extrabold text-base text-zinc-900 mb-4 pb-2 border-b border-zinc-100">
-                  Integrasi Google OAuth & API
-                </h3>
-
-                <form method="POST" action="" class="space-y-4">
-                  <input type="hidden" name="action" value="save_settings">
-
-                  <div>
-                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1.5">Google OAuth Client ID</label>
-                    <input type="text" name="google_client_id" value="<?= htmlspecialchars($googleClientId) ?>" placeholder="Contoh: xxxxx-xxxxx.apps.googleusercontent.com" class="w-full px-4 py-2.5 text-xs font-mono border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none">
-                    <p class="text-[11px] text-zinc-400 mt-1">Digunakan untuk tombol masuk otomatis "Masuk dengan Google".</p>
-                  </div>
-
-                  <div class="pt-2 flex justify-end">
-                    <button type="submit" class="px-6 py-2.5 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-xs transition uppercase tracking-wider">
-                      Simpan Client ID
-                    </button>
-                  </div>
-                </form>
-              </div>
-
             </div>
           <?php endif; ?>
 
@@ -2365,6 +2678,71 @@ $categoriesList = array_keys($navbarCategories);
           };
           reader.readAsDataURL(file);
         }
+      }
+
+      // User Management Modals
+      function openModalUserInfo(user) {
+        if (!user) return;
+        const imgAvatar = document.getElementById('infoAvatar');
+        const fallbackAvatar = document.getElementById('infoAvatarFallback');
+        if (user.avatar) {
+          imgAvatar.src = user.avatar;
+          imgAvatar.classList.remove('hidden');
+          fallbackAvatar.classList.add('hidden');
+        } else {
+          fallbackAvatar.textContent = (user.name || 'U').charAt(0).toUpperCase();
+          fallbackAvatar.classList.remove('hidden');
+          imgAvatar.classList.add('hidden');
+        }
+
+        document.getElementById('infoName').textContent = user.name || '-';
+        document.getElementById('infoUsername').textContent = '@' + (user.username || '-');
+        document.getElementById('infoEmail').textContent = user.email || '-';
+        document.getElementById('infoRole').textContent = (user.role || '-').toUpperCase();
+        
+        const statusEl = document.getElementById('infoStatus');
+        const st = (user.status || 'active').toLowerCase();
+        if (st === 'active') {
+          statusEl.textContent = 'AKTIF';
+          statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200';
+        } else if (st === 'inactive') {
+          statusEl.textContent = 'NONAKTIF';
+          statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200';
+        } else if (st === 'blocked') {
+          statusEl.textContent = 'DIBLOKIR';
+          statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200';
+        }
+
+        document.getElementById('infoWhatsapp').textContent = user.whatsapp || '-';
+        document.getElementById('infoGender').textContent = user.gender || '-';
+        document.getElementById('infoBirthDate').textContent = user.birth_date || '-';
+        
+        const locParts = [user.city, user.province, user.country].filter(Boolean);
+        document.getElementById('infoLocation').textContent = locParts.length ? locParts.join(', ') : '-';
+        document.getElementById('infoAddress').textContent = user.address || '-';
+        document.getElementById('infoCreatedAt').textContent = user.created_at || '-';
+
+        document.getElementById('modalUserInfo').classList.remove('hidden');
+      }
+
+      function openModalUserEdit(user) {
+        if (!user) return;
+        document.getElementById('editUserId').value = user.id || '';
+        document.getElementById('editUserName').value = user.name || '';
+        document.getElementById('editUserUsername').value = user.username || '';
+        document.getElementById('editUserEmail').value = user.email || '';
+        document.getElementById('editUserWhatsapp').value = user.whatsapp || '';
+        document.getElementById('editUserRole').value = (user.role || 'sahabat').toLowerCase();
+        document.getElementById('editUserStatus').value = (user.status || 'active').toLowerCase();
+        document.getElementById('modalUserEdit').classList.remove('hidden');
+      }
+
+      function openModalUserReset(user) {
+        if (!user) return;
+        document.getElementById('resetUserId').value = user.id || '';
+        document.getElementById('resetUserDisplayName').textContent = (user.name || '') + ' (@' + (user.username || '') + ')';
+        document.getElementById('resetNewPassword').value = '';
+        document.getElementById('modalUserResetPassword').classList.remove('hidden');
       }
     </script>
   <?php endif; ?>
