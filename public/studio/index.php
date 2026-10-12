@@ -953,26 +953,33 @@ $categoriesList = array_keys($navbarCategories);
     <!-- STUDIO REDAKSI MAIN LAYOUT (MATCHING SCREENSHOT) -->
     <div class="min-h-screen flex">
 
-      <!-- LEFT SIDEBAR FRAME: Pinned sticky h-screen top-0 -->
-      <aside id="sidebar" class="w-64 bg-white border-r border-zinc-200 h-screen sticky top-0 flex flex-col justify-between shrink-0 transition-all duration-300 z-40 overflow-hidden select-none">
-        <!-- Top Scrollable Container: Logo & Menus -->
-        <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0">
-          
-          <!-- Sidebar Header: GNN Logo + Collapse Button (Matching media_1791791430911.png) -->
-          <div class="h-[72px] px-4 border-b border-zinc-100 flex items-center justify-between shrink-0">
-            <a href="/" class="flex items-center gap-2.5 overflow-hidden group">
-              <div class="w-9 h-9 rounded-xl bg-[#CC0000] flex items-center justify-center shrink-0 shadow-xs">
-                <span class="text-white font-black text-sm tracking-tighter">GNN</span>
-              </div>
-              <div class="sidebar-text flex flex-col leading-none">
-                <span class="text-[13px] font-extrabold tracking-tight italic text-zinc-900 group-hover:text-red-700 transition">Good News</span>
-                <span class="text-[9px] font-black tracking-widest text-white bg-[#CC0000] px-1.5 py-0.5 rounded-xs uppercase mt-0.5 inline-block text-center w-fit">Nusantara</span>
-              </div>
-            </a>
-            <button onclick="toggleSidebar()" title="Kecilkan / Perbesar Menu" class="sidebar-text w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition shrink-0">
-              <svg id="sidebarToggleIcon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            </button>
-          </div>
+    <!-- MOBILE SIDEBAR BACKDROP OVERLAY -->
+    <div id="mobileSidebarBackdrop" onclick="closeMobileSidebar()" class="fixed inset-0 bg-black/60 z-40 lg:hidden hidden backdrop-blur-xs transition-opacity duration-300"></div>
+
+    <!-- LEFT SIDEBAR FRAME: Drawer on mobile, pinned sticky on lg screens -->
+    <aside id="sidebar" class="fixed lg:sticky top-0 inset-y-0 left-0 -translate-x-full lg:translate-x-0 w-64 bg-white border-r border-zinc-200 h-screen flex flex-col justify-between shrink-0 transition-transform lg:transition-all duration-300 z-50 lg:z-40 overflow-hidden select-none shadow-2xl lg:shadow-none">
+      <!-- Top Scrollable Container: Logo & Menus -->
+      <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0">
+        
+        <!-- Sidebar Header: GNN Logo + Close / Collapse Button -->
+        <div class="h-[72px] px-4 border-b border-zinc-100 flex items-center justify-between shrink-0">
+          <a href="/" class="flex items-center gap-2.5 overflow-hidden group">
+            <div class="w-9 h-9 rounded-xl bg-[#CC0000] flex items-center justify-center shrink-0 shadow-xs">
+              <span class="text-white font-black text-sm tracking-tighter">GNN</span>
+            </div>
+            <div class="sidebar-text flex flex-col leading-none">
+              <span class="text-[13px] font-extrabold tracking-tight italic text-zinc-900 group-hover:text-red-700 transition">Good News</span>
+              <span class="text-[9px] font-black tracking-widest text-white bg-[#CC0000] px-1.5 py-0.5 rounded-xs uppercase mt-0.5 inline-block text-center w-fit">Nusantara</span>
+            </div>
+          </a>
+          <!-- Close button on mobile / Collapse button on desktop -->
+          <button onclick="closeMobileSidebar()" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <button onclick="toggleSidebar()" title="Kecilkan / Perbesar Menu" class="hidden lg:flex sidebar-text w-7 h-7 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition shrink-0">
+            <svg id="sidebarToggleIcon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+        </div>
 
           <!-- Section Label -->
           <div class="sidebar-text px-5 pt-6 pb-2 shrink-0">
@@ -1083,41 +1090,46 @@ $categoriesList = array_keys($navbarCategories);
       <div class="flex-1 flex flex-col min-w-0">
         
         <!-- TOP NAVIGATION BAR -->
-        <header class="h-[72px] bg-white border-b border-zinc-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header class="h-[64px] sm:h-[72px] bg-white border-b border-zinc-200 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
           
-          <!-- Left: Icon Badge & Title (Matching media_1791791444421.png & media_1791791458449.png) -->
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-zinc-100/90 border border-zinc-200/60 flex items-center justify-center text-[#CC0000] shrink-0 shadow-2xs">
+          <!-- Left: Mobile Menu Trigger + Icon Badge & Title -->
+          <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <!-- Mobile Hamburger Toggle -->
+            <button type="button" onclick="openMobileSidebar()" class="lg:hidden w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center shrink-0 transition" title="Buka Menu Studio">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-zinc-100/90 border border-zinc-200/60 flex items-center justify-center text-[#CC0000] shrink-0 shadow-2xs">
               <?php if ($tab === 'gallery'): ?>
-                <svg class="w-5 h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
               <?php elseif ($tab === 'videos'): ?>
-                <svg class="w-5 h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
               <?php elseif ($tab === 'users'): ?>
-                <svg class="w-5 h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
               <?php elseif ($tab === 'settings'): ?>
-                <svg class="w-5 h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
               <?php else: ?>
-                <svg class="w-5 h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <?php endif; ?>
             </div>
-            <h1 class="text-base sm:text-lg font-extrabold text-zinc-900 tracking-tight">
+            <h1 class="text-sm sm:text-lg font-extrabold text-zinc-900 tracking-tight truncate">
               <?php
-                if ($tab === 'write') echo $editArticle ? 'Edit Artikel' : 'Tulis Artikel Baru';
-                elseif ($tab === 'gallery') echo 'Galeri Foto Redaksi';
-                elseif ($tab === 'videos') echo 'Kelola Video YouTube GNN TV';
-                elseif ($tab === 'users') echo 'Kelola Tim & Pengguna';
-                elseif ($tab === 'settings') echo 'Pengaturan Sistem Studio';
-                else echo 'Kelola Artikel & Berita';
+                if ($tab === 'write') echo $editArticle ? 'Edit Artikel' : 'Tulis Artikel';
+                elseif ($tab === 'gallery') echo 'Galeri Foto';
+                elseif ($tab === 'videos') echo 'Video GNN TV';
+                elseif ($tab === 'users') echo 'Kelola Tim';
+                elseif ($tab === 'settings') echo 'Pengaturan';
+                else echo 'Kelola Artikel';
               ?>
             </h1>
           </div>
 
-          <!-- Right: Search, Filter, Action Button (Matching screenshots) -->
-          <div class="flex items-center gap-3">
+          <!-- Right: Search, Filter, Action Button (Responsive for Mobile) -->
+          <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
             
             <?php if ($tab === 'articles'): ?>
-              <!-- Search Input Pill -->
-              <form method="GET" action="" class="relative">
+              <!-- Search Input Pill (Desktop & Tablet) -->
+              <form method="GET" action="" class="relative hidden md:block">
                 <input type="hidden" name="tab" value="articles">
                 <input type="hidden" name="status" value="<?= htmlspecialchars($filterStatus) ?>">
                 <input type="hidden" name="category" value="<?= htmlspecialchars($filterCategory) ?>">
@@ -1130,35 +1142,36 @@ $categoriesList = array_keys($navbarCategories);
                 </div>
               </form>
 
-              <!-- Category Dropdown Pill (Kategori dari Navbar) -->
-              <div class="relative">
-                <select onchange="window.location.href='?tab=articles&q=<?= urlencode($searchQuery) ?>&status=<?= urlencode($filterStatus) ?>&category=' + encodeURIComponent(this.value)" class="appearance-none bg-white border border-zinc-200 rounded-full pl-3.5 pr-8 py-2 text-xs font-semibold text-zinc-700 shadow-xs outline-none cursor-pointer hover:border-zinc-300 transition">
+              <!-- Category Dropdown Pill (Desktop) -->
+              <div class="relative hidden sm:block">
+                <select onchange="window.location.href='?tab=articles&q=<?= urlencode($searchQuery) ?>&status=<?= urlencode($filterStatus) ?>&category=' + encodeURIComponent(this.value)" class="appearance-none bg-white border border-zinc-200 rounded-full pl-3 pr-7 py-2 text-xs font-semibold text-zinc-700 shadow-xs outline-none cursor-pointer hover:border-zinc-300 transition max-w-[140px] truncate">
                   <option value="all" <?= $filterCategory === 'all' ? 'selected' : '' ?>>Semua Kategori</option>
                   <?php foreach ($categoriesList as $cat): ?>
                     <option value="<?= $cat ?>" <?= (strcasecmp($filterCategory, $cat) === 0) ? 'selected' : '' ?>><?= $cat ?></option>
                   <?php endforeach; ?>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
               </div>
 
-              <!-- Status Dropdown Pill -->
-              <div class="relative">
-                <select onchange="window.location.href='?tab=articles&q=<?= urlencode($searchQuery) ?>&category=<?= urlencode($filterCategory) ?>&status=' + this.value" class="appearance-none bg-white border border-zinc-200 rounded-full pl-3.5 pr-8 py-2 text-xs font-semibold text-zinc-700 shadow-xs outline-none cursor-pointer hover:border-zinc-300 transition">
+              <!-- Status Dropdown Pill (Desktop) -->
+              <div class="relative hidden sm:block">
+                <select onchange="window.location.href='?tab=articles&q=<?= urlencode($searchQuery) ?>&category=<?= urlencode($filterCategory) ?>&status=' + this.value" class="appearance-none bg-white border border-zinc-200 rounded-full pl-3 pr-7 py-2 text-xs font-semibold text-zinc-700 shadow-xs outline-none cursor-pointer hover:border-zinc-300 transition">
                   <option value="all" <?= $filterStatus === 'all' ? 'selected' : '' ?>>Semua Status</option>
                   <option value="publish" <?= $filterStatus === 'publish' ? 'selected' : '' ?>>Publish</option>
                   <option value="draft" <?= $filterStatus === 'draft' ? 'selected' : '' ?>>Draft</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
               </div>
 
               <!-- Action Button: + Buat Artikel -->
-              <a href="?tab=write" class="bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full px-4 sm:px-5 py-2.5 flex items-center gap-1.5 shadow-xs transition shrink-0">
+              <a href="?tab=write" class="bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5 flex items-center gap-1 sm:gap-1.5 shadow-xs transition shrink-0">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                <span>Buat Artikel</span>
+                <span class="inline">Tulis</span>
+                <span class="hidden sm:inline">Artikel</span>
               </a>
             
             <?php elseif ($tab === 'gallery'): ?>
@@ -1209,15 +1222,15 @@ $categoriesList = array_keys($navbarCategories);
         </header>
 
         <!-- FLASH NOTIFICATIONS -->
-        <div class="px-6 sm:px-8 pt-4">
+        <div class="px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4">
           <?php if (!empty($msg) || !empty($_GET['msg'])): ?>
-            <div class="bg-green-50 text-green-800 p-3.5 rounded-2xl border border-green-200 text-xs font-bold flex items-center justify-between">
+            <div class="bg-green-50 text-green-800 p-3 sm:p-3.5 rounded-2xl border border-green-200 text-xs font-bold flex items-center justify-between">
               <span><?= htmlspecialchars($msg ?: $_GET['msg']) ?></span>
               <button onclick="this.parentElement.remove()" class="text-green-600 font-black text-sm">&times;</button>
             </div>
           <?php endif; ?>
           <?php if (!empty($err)): ?>
-            <div class="bg-red-50 text-red-800 p-3.5 rounded-2xl border border-red-200 text-xs font-bold flex items-center justify-between">
+            <div class="bg-red-50 text-red-800 p-3 sm:p-3.5 rounded-2xl border border-red-200 text-xs font-bold flex items-center justify-between">
               <span><?= htmlspecialchars($err) ?></span>
               <button onclick="this.parentElement.remove()" class="text-red-600 font-black text-sm">&times;</button>
             </div>
@@ -1225,11 +1238,11 @@ $categoriesList = array_keys($navbarCategories);
         </div>
 
         <!-- MAIN BODY VIEW -->
-        <main class="p-6 sm:p-8 flex-1">
+        <main class="p-3 sm:p-6 lg:p-8 flex-1">
 
           <!-- TAB: ARTICLES -->
           <?php if ($tab === 'articles'): ?>
-            <div class="bg-white rounded-3xl border border-zinc-200/80 shadow-xs p-6 sm:p-8 min-h-[480px] flex flex-col justify-between">
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-6 lg:p-8 min-h-[480px] flex flex-col justify-between">
               
               <?php if (empty($articles)): ?>
                 <!-- EMPTY STATE (MATCHING SCREENSHOT) -->
@@ -1323,7 +1336,7 @@ $categoriesList = array_keys($navbarCategories);
 
           <!-- TAB: WRITE / EDIT ARTICLE -->
           <?php elseif ($tab === 'write'): ?>
-            <div class="max-w-5xl mx-auto bg-white rounded-3xl border border-zinc-200/80 shadow-xs p-6 sm:p-8">
+            <div class="max-w-5xl mx-auto bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-4 sm:p-6 lg:p-8">
               
               <!-- Form Header -->
               <div class="flex items-center justify-between pb-4 mb-6 border-b border-zinc-100">
@@ -2038,6 +2051,30 @@ $categoriesList = array_keys($navbarCategories);
     </div>
 
     <script>
+      function openMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('mobileSidebarBackdrop');
+        if (sidebar) {
+          sidebar.classList.remove('-translate-x-full');
+          sidebar.classList.add('translate-x-0');
+        }
+        if (backdrop) {
+          backdrop.classList.remove('hidden');
+        }
+      }
+
+      function closeMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('mobileSidebarBackdrop');
+        if (sidebar) {
+          sidebar.classList.add('-translate-x-full');
+          sidebar.classList.remove('translate-x-0');
+        }
+        if (backdrop) {
+          backdrop.classList.add('hidden');
+        }
+      }
+
       function toggleSidebar(forceState) {
         const sidebar = document.getElementById('sidebar');
         const userCard = document.getElementById('sidebarUserCard');
