@@ -2442,12 +2442,10 @@ $categoriesList = array_keys($navbarCategories);
                 <table class="w-full text-left text-xs text-zinc-700 whitespace-nowrap">
                   <thead>
                     <tr class="border-b border-zinc-100 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                      <th class="pb-3 px-3">Nama Pengguna</th>
-                      <th class="pb-3 px-3">Username</th>
-                      <th class="pb-3 px-3">Email</th>
-                      <th class="pb-3 px-3">Peran (Role)</th>
-                      <th class="pb-3 px-3">Status</th>
-                      <th class="pb-3 px-3 text-right">Aksi Manajemen</th>
+                      <th class="pb-3 px-4">Nama Pengguna</th>
+                      <th class="pb-3 px-4">Peran (Role)</th>
+                      <th class="pb-3 px-4">Status</th>
+                      <th class="pb-3 px-4 text-right">Aksi Manajemen</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-zinc-100">
@@ -2475,36 +2473,34 @@ $categoriesList = array_keys($navbarCategories);
                         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
                       ?>
                       <tr class="hover:bg-zinc-50/70 transition">
-                        <td class="py-3.5 px-3 font-bold text-zinc-900">
+                        <td class="py-3.5 px-4 font-bold text-zinc-900">
                           <div class="flex items-center gap-3">
                             <?php if (!empty($u['avatar'])): ?>
-                              <img src="<?= htmlspecialchars($u['avatar']) ?>" class="w-8 h-8 rounded-full object-cover border border-zinc-200">
+                              <img src="<?= htmlspecialchars($u['avatar']) ?>" class="w-9 h-9 rounded-full object-cover border border-zinc-200 shadow-2xs">
                             <?php else: ?>
-                              <div class="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 font-bold flex items-center justify-center text-xs border border-zinc-200">
+                              <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-zinc-100 to-zinc-200 text-zinc-700 font-extrabold flex items-center justify-center text-xs border border-zinc-200 shadow-2xs">
                                 <?= strtoupper(substr($u['name'] ?: 'U', 0, 1)) ?>
                               </div>
                             <?php endif; ?>
                             <div>
-                              <div><?= htmlspecialchars($u['name']) ?></div>
+                              <div class="text-xs sm:text-sm font-extrabold text-zinc-900"><?= htmlspecialchars($u['name']) ?></div>
                               <?php if ($isSuperAdmin): ?>
-                                <span class="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Super Admin</span>
+                                <span class="inline-flex items-center gap-1 text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md mt-0.5">Super Admin</span>
                               <?php elseif ($isSelf): ?>
-                                <span class="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">Akun Anda</span>
+                                <span class="inline-flex items-center gap-1 text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-md mt-0.5">Akun Anda</span>
                               <?php endif; ?>
                             </div>
                           </div>
                         </td>
-                        <td class="py-3.5 px-3 text-zinc-500 font-mono text-[11px]">@<?= htmlspecialchars($u['username']) ?></td>
-                        <td class="py-3.5 px-3 text-zinc-500"><?= htmlspecialchars($u['email']) ?></td>
-                        <td class="py-3.5 px-3">
+                        <td class="py-3.5 px-4">
                           <span class="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase border <?= $u['role'] === 'admin' ? 'bg-red-50 text-[#CC0000] border-red-200' : ($u['role'] === 'reviewer' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200') ?>">
                             <?= htmlspecialchars($u['role']) ?>
                           </span>
                         </td>
-                        <td class="py-3.5 px-3">
+                        <td class="py-3.5 px-4">
                           <?php if ($uStatus === 'active'): ?>
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-[10px] uppercase">
-                              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
                             </span>
                           <?php elseif ($uStatus === 'inactive'): ?>
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold text-[10px] uppercase">
@@ -2520,23 +2516,23 @@ $categoriesList = array_keys($navbarCategories);
                             </span>
                           <?php endif; ?>
                         </td>
-                        <td class="py-3.5 px-3 text-right">
+                        <td class="py-3.5 px-4 text-right">
                           <div class="inline-flex items-center gap-1.5 justify-end">
                             <!-- Tombol Lihat Info -->
-                            <button type="button" onclick='openModalUserInfo(<?= $userSafeJson ?>)' class="px-2 py-1 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg border border-zinc-200 transition inline-flex items-center gap-1 text-[11px] font-bold" title="Lihat Info Lengkap">
+                            <button type="button" onclick='openModalUserInfo(<?= $userSafeJson ?>)' class="px-2.5 py-1.5 text-zinc-700 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-xl border border-zinc-200/80 transition inline-flex items-center gap-1 text-[11px] font-bold shadow-2xs hover:scale-103 cursor-pointer" title="Lihat Profil Lengkap">
                               <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                               <span>Info</span>
                             </button>
 
                             <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
                               <!-- Tombol Edit Data -->
-                              <button type="button" onclick='openModalUserEdit(<?= $userSafeJson ?>)' class="px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg border border-blue-200 transition inline-flex items-center gap-1 text-[11px] font-bold" title="Edit Data Pengguna">
+                              <button type="button" onclick='openModalUserEdit(<?= $userSafeJson ?>)' class="px-2.5 py-1.5 text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition inline-flex items-center gap-1 text-[11px] font-bold shadow-2xs hover:scale-103 cursor-pointer" title="Edit Data Pengguna">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 <span>Edit</span>
                               </button>
 
                               <!-- Tombol Reset Sandi -->
-                              <button type="button" onclick='openModalUserReset(<?= $userSafeJson ?>)' class="px-2 py-1 text-amber-700 hover:text-amber-900 hover:bg-amber-50 rounded-lg border border-amber-200 transition inline-flex items-center gap-1 text-[11px] font-bold" title="Reset Kata Sandi">
+                              <button type="button" onclick='openModalUserReset(<?= $userSafeJson ?>)' class="px-2.5 py-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 transition inline-flex items-center gap-1 text-[11px] font-bold shadow-2xs hover:scale-103 cursor-pointer" title="Reset Kata Sandi">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                                 <span>Sandi</span>
                               </button>
@@ -2546,22 +2542,18 @@ $categoriesList = array_keys($navbarCategories);
                                 <form method="POST" action="" class="inline-block">
                                   <input type="hidden" name="action" value="update_user_status">
                                   <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
-                                  <select name="new_status" onchange="if(confirm('Ubah status akun @<?= htmlspecialchars($u['username']) ?> menjadi ' + this.options[this.selectedIndex].text + '?')) this.form.submit(); else this.value='<?= $uStatus ?>';" class="px-2 py-1 text-[11px] font-bold rounded-lg border cursor-pointer outline-none transition <?= $uStatus === 'active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : ($uStatus === 'inactive' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-rose-50 text-rose-800 border-rose-200') ?>">
+                                  <select name="new_status" onchange="this.form.submit();" class="px-2.5 py-1.5 text-[11px] font-bold rounded-xl border cursor-pointer outline-none transition shadow-2xs <?= $uStatus === 'active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : ($uStatus === 'inactive' ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100' : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100') ?>" title="Ubah Status Akses">
                                     <option value="active" <?= $uStatus === 'active' ? 'selected' : '' ?>>🟢 Aktif</option>
-                                    <option value="inactive" <?= $uStatus === 'inactive' ? 'selected' : '' ?>>🟡 Nonaktifkan</option>
-                                    <option value="blocked" <?= $uStatus === 'blocked' ? 'selected' : '' ?>>🔴 Blokir Akses</option>
+                                    <option value="inactive" <?= $uStatus === 'inactive' ? 'selected' : '' ?>>🟡 Nonaktif</option>
+                                    <option value="blocked" <?= $uStatus === 'blocked' ? 'selected' : '' ?>>🔴 Blokir</option>
                                   </select>
                                 </form>
 
-                                <!-- Tombol Hapus Pengguna Permanen (Admin only) -->
-                                <form method="POST" action="" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna @<?= htmlspecialchars($u['username']) ?> secara permanen? Data yang telah dihapus tidak dapat dipulihkan.');">
-                                  <input type="hidden" name="action" value="delete_user">
-                                  <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
-                                  <button type="submit" class="px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-200 transition inline-flex items-center gap-1 text-[11px] font-bold cursor-pointer" title="Hapus Pengguna Secara Permanen">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    <span>Hapus</span>
-                                  </button>
-                                </form>
+                                <!-- Tombol Hapus Pengguna (Modal Trigger) -->
+                                <button type="button" onclick='openModalUserDelete(<?= $userSafeJson ?>)' class="px-2.5 py-1.5 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition inline-flex items-center gap-1 text-[11px] font-bold shadow-2xs hover:scale-103 cursor-pointer" title="Hapus Pengguna Secara Permanen">
+                                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                  <span>Hapus</span>
+                                </button>
                               <?php endif; ?>
                             <?php endif; ?>
                           </div>
@@ -2574,119 +2566,159 @@ $categoriesList = array_keys($navbarCategories);
             </div>
 
             <!-- MODAL: LIHAT INFO PENGGUNA -->
-            <div id="modalUserInfo" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-              <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
-                  <h3 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    <span>Informasi Lengkap Pengguna</span>
-                  </h3>
-                  <button type="button" onclick="document.getElementById('modalUserInfo').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg">&times;</button>
+            <div id="modalUserInfo" class="fixed inset-0 bg-zinc-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+              <div class="bg-white rounded-[2rem] max-w-lg w-full shadow-2xl relative overflow-hidden border border-zinc-100 max-h-[92vh] flex flex-col">
+                <!-- Cover Banner Header -->
+                <div class="h-28 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 relative p-4 flex justify-between items-start shrink-0">
+                  <div class="flex items-center gap-2 text-white/90 font-bold text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span>Profil Pengguna Studio</span>
+                  </div>
+                  <button type="button" onclick="document.getElementById('modalUserInfo').classList.add('hidden')" class="w-8 h-8 rounded-full bg-black/25 hover:bg-black/50 text-white backdrop-blur-sm flex items-center justify-center font-bold text-lg transition cursor-pointer" title="Tutup">&times;</button>
                 </div>
 
-                <div class="space-y-4">
-                  <!-- Profil Singkat Header -->
-                  <div class="flex items-center gap-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
-                    <img id="infoAvatar" src="" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-xs hidden">
-                    <div id="infoAvatarFallback" class="w-14 h-14 rounded-full bg-blue-100 text-blue-700 font-extrabold text-xl flex items-center justify-center border-2 border-white shadow-xs">U</div>
-                    <div>
-                      <h4 id="infoName" class="font-extrabold text-base text-zinc-900">-</h4>
-                      <p id="infoUsername" class="text-xs text-zinc-500 font-mono">-</p>
-                      <div class="flex items-center gap-2 mt-1.5">
-                        <span id="infoRole" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">-</span>
-                        <span id="infoStatus" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">-</span>
+                <!-- Scrollable Body -->
+                <div class="p-6 pt-0 overflow-y-auto space-y-4">
+                  <!-- Header Profile Info -->
+                  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 -mt-12">
+                    <div class="flex items-end gap-3.5">
+                      <img id="infoAvatar" src="" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-white shadow-md bg-white hidden">
+                      <div id="infoAvatarFallback" class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-2xl flex items-center justify-center ring-4 ring-white shadow-md">U</div>
+                      <div class="pb-1">
+                        <h4 id="infoName" class="font-black text-lg sm:text-xl text-zinc-900 leading-tight">-</h4>
+                        <p id="infoUsername" class="text-xs text-zinc-500 font-mono mt-0.5">-</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 pb-1">
+                      <span id="infoRole" class="px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">-</span>
+                      <span id="infoStatus" class="px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">-</span>
+                    </div>
+                  </div>
+
+                  <!-- Group 1: Kontak & Komunikasi -->
+                  <div class="bg-zinc-50/80 rounded-2xl p-4 border border-zinc-100 space-y-3">
+                    <div class="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                      <span>Kontak & Akses</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span class="text-[10px] text-zinc-400 block mb-0.5">Alamat Email</span>
+                        <div class="font-bold text-zinc-800 break-all flex items-center gap-1.5">
+                          <span id="infoEmail">-</span>
+                        </div>
+                      </div>
+                      <div>
+                        <span class="text-[10px] text-zinc-400 block mb-0.5">No. WhatsApp / HP</span>
+                        <div class="flex items-center gap-2">
+                          <span id="infoWhatsapp" class="font-bold text-zinc-800">-</span>
+                          <a id="infoWaLink" href="#" target="_blank" class="hidden px-2 py-0.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-bold border border-emerald-200 transition">Chat WA</a>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Grid Informasi Detail -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Email</span>
-                      <span id="infoEmail" class="font-semibold text-zinc-900 break-all">-</span>
+                  <!-- Group 2: Biodata & Wilayah -->
+                  <div class="bg-zinc-50/80 rounded-2xl p-4 border border-zinc-100 space-y-3">
+                    <div class="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      <span>Biodata & Lokasi Domisili</span>
                     </div>
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">WhatsApp / No. HP</span>
-                      <span id="infoWhatsapp" class="font-semibold text-zinc-900">-</span>
-                    </div>
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Jenis Kelamin</span>
-                      <span id="infoGender" class="font-semibold text-zinc-900">-</span>
-                    </div>
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Tanggal Lahir</span>
-                      <span id="infoBirthDate" class="font-semibold text-zinc-900">-</span>
-                    </div>
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100 sm:col-span-2">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Daerah / Lokasi</span>
-                      <span id="infoLocation" class="font-semibold text-zinc-900">-</span>
-                    </div>
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100 sm:col-span-2">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Alamat Domisili</span>
-                      <span id="infoAddress" class="font-semibold text-zinc-900">-</span>
-                    </div>
-                    <div class="p-3 bg-zinc-50/70 rounded-xl border border-zinc-100 sm:col-span-2">
-                      <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Waktu Terdaftar</span>
-                      <span id="infoCreatedAt" class="font-semibold text-zinc-900">-</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span class="text-[10px] text-zinc-400 block mb-0.5">Jenis Kelamin</span>
+                        <span id="infoGender" class="font-bold text-zinc-800">-</span>
+                      </div>
+                      <div>
+                        <span class="text-[10px] text-zinc-400 block mb-0.5">Tanggal Lahir</span>
+                        <span id="infoBirthDate" class="font-bold text-zinc-800">-</span>
+                      </div>
+                      <div class="sm:col-span-2">
+                        <span class="text-[10px] text-zinc-400 block mb-0.5">Kota / Provinsi / Negara</span>
+                        <span id="infoLocation" class="font-bold text-zinc-800">-</span>
+                      </div>
+                      <div class="sm:col-span-2">
+                        <span class="text-[10px] text-zinc-400 block mb-0.5">Alamat Lengkap</span>
+                        <span id="infoAddress" class="font-semibold text-zinc-700">-</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="pt-3 flex justify-end">
-                    <button type="button" onclick="document.getElementById('modalUserInfo').classList.add('hidden')" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-900 text-white font-bold text-xs rounded-full transition">
-                      Tutup
-                    </button>
+                  <!-- Group 3: Waktu Pendaftaran -->
+                  <div class="p-3 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
+                    <span class="text-[11px]">Terdaftar pada:</span>
+                    <span id="infoCreatedAt" class="font-mono font-bold text-zinc-700 text-[11px]">-</span>
                   </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 px-6 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50 shrink-0">
+                  <button type="button" onclick="document.getElementById('modalUserInfo').classList.add('hidden')" class="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                    Tutup
+                  </button>
+                  <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
+                    <button type="button" id="btnEditFromInfo" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      <span>Edit Pengguna</span>
+                    </button>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
 
             <!-- MODAL: EDIT DATA PENGGUNA -->
-            <div id="modalUserEdit" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-              <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
-                  <h3 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    <span>Edit Data Pengguna</span>
-                  </h3>
-                  <button type="button" onclick="document.getElementById('modalUserEdit').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg">&times;</button>
+            <div id="modalUserEdit" class="fixed inset-0 bg-zinc-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+              <div class="bg-white rounded-[2rem] max-w-md w-full shadow-2xl relative overflow-hidden border border-zinc-100 max-h-[92vh] flex flex-col">
+                <div class="p-6 pb-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50 shrink-0">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-2xs">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </div>
+                    <div>
+                      <h3 class="font-extrabold text-base text-zinc-900">Edit Data Pengguna</h3>
+                      <p class="text-[11px] text-zinc-400">Perbarui profil, hak akses peran, dan status akun</p>
+                    </div>
+                  </div>
+                  <button type="button" onclick="document.getElementById('modalUserEdit').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg transition cursor-pointer">&times;</button>
                 </div>
 
-                <form method="POST" action="" class="space-y-3.5">
+                <form method="POST" action="" class="p-6 overflow-y-auto space-y-4">
                   <input type="hidden" name="action" value="admin_update_user">
                   <input type="hidden" name="user_id" id="editUserId">
 
                   <div>
-                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Nama Lengkap *</label>
-                    <input type="text" name="name" id="editUserName" required class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none">
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Username *</label>
-                    <input type="text" name="username" id="editUserUsername" required class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-mono">
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Email *</label>
-                    <input type="email" name="email" id="editUserEmail" required class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none">
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">No. WhatsApp</label>
-                    <input type="text" name="whatsapp" id="editUserWhatsapp" placeholder="08xxxxxxxxxx" class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none">
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">Nama Lengkap *</label>
+                    <input type="text" name="name" id="editUserName" required class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition font-semibold text-zinc-800">
                   </div>
 
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Peran (Role)</label>
-                      <select name="role" id="editUserRole" class="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-bold bg-white cursor-pointer">
-                        <option value="sahabat">SAHABAT</option>
-                        <option value="reviewer">REVIEWER</option>
-                        <option value="admin">ADMIN</option>
+                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">Username *</label>
+                      <input type="text" name="username" id="editUserUsername" required class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition font-mono text-zinc-800">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">No. WhatsApp</label>
+                      <input type="text" name="whatsapp" id="editUserWhatsapp" placeholder="08xxxxxxxxxx" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition text-zinc-800">
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">Alamat Email *</label>
+                    <input type="email" name="email" id="editUserEmail" required class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition text-zinc-800">
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">Peran (Role)</label>
+                      <select name="role" id="editUserRole" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-bold bg-white cursor-pointer shadow-2xs">
+                        <option value="sahabat">SAHABAT (Draft)</option>
+                        <option value="reviewer">REVIEWER (Publikasi)</option>
+                        <option value="admin">ADMIN (Akses Penuh)</option>
                       </select>
                     </div>
                     <div>
-                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Status Akun</label>
-                      <select name="status" id="editUserStatus" class="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-bold bg-white cursor-pointer">
+                      <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">Status Akun</label>
+                      <select name="status" id="editUserStatus" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-blue-600 outline-none font-bold bg-white cursor-pointer shadow-2xs">
                         <option value="active">🟢 AKTIF</option>
                         <option value="inactive">🟡 NONAKTIF</option>
                         <option value="blocked">🔴 DIBLOKIR</option>
@@ -2694,9 +2726,9 @@ $categoriesList = array_keys($navbarCategories);
                     </div>
                   </div>
 
-                  <div class="pt-4 flex justify-end gap-2 border-t border-zinc-100">
-                    <button type="button" onclick="document.getElementById('modalUserEdit').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-700">Batal</button>
-                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full shadow-xs transition">
+                  <div class="pt-4 flex justify-end gap-2.5 border-t border-zinc-100">
+                    <button type="button" onclick="document.getElementById('modalUserEdit').classList.add('hidden')" class="px-5 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition cursor-pointer">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition cursor-pointer">
                       Simpan Perubahan
                     </button>
                   </div>
@@ -2705,37 +2737,65 @@ $categoriesList = array_keys($navbarCategories);
             </div>
 
             <!-- MODAL: RESET KATA SANDI -->
-            <div id="modalUserResetPassword" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-              <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+            <div id="modalUserResetPassword" class="fixed inset-0 bg-zinc-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+              <div class="bg-white rounded-[2rem] max-w-sm w-full shadow-2xl relative overflow-hidden border border-zinc-100 p-6">
                 <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
-                  <h3 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                    <span>Reset Kata Sandi</span>
-                  </h3>
-                  <button type="button" onclick="document.getElementById('modalUserResetPassword').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg">&times;</button>
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 shadow-2xs">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    </div>
+                    <h3 class="font-extrabold text-base text-zinc-900">Reset Sandi</h3>
+                  </div>
+                  <button type="button" onclick="document.getElementById('modalUserResetPassword').classList.add('hidden')" class="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center font-bold text-lg transition cursor-pointer">&times;</button>
                 </div>
 
                 <form method="POST" action="" class="space-y-4">
                   <input type="hidden" name="action" value="reset_user_password">
                   <input type="hidden" name="user_id" id="resetUserId">
 
-                  <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-                    Mereset kata sandi untuk akun:
-                    <strong id="resetUserDisplayName" class="block font-bold mt-0.5 text-zinc-900">-</strong>
+                  <div class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 text-xs text-amber-900">
+                    <span class="text-[10px] uppercase font-bold text-amber-700 block tracking-wider">Target Akun Pengguna</span>
+                    <strong id="resetUserDisplayName" class="block font-black text-sm mt-0.5 text-zinc-900">-</strong>
                   </div>
 
                   <div>
-                    <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Kata Sandi Baru *</label>
-                    <input type="password" name="new_password" id="resetNewPassword" required minlength="6" placeholder="Minimal 6 karakter..." class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-amber-600 outline-none">
-                    <p class="text-[11px] text-zinc-400 mt-1">Pengguna dapat langsung menggunakan sandi baru ini untuk login.</p>
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="block text-xs font-bold text-zinc-700 uppercase">Kata Sandi Baru *</label>
+                      <button type="button" onclick="generateRandomPassword()" class="text-[11px] font-bold text-amber-600 hover:text-amber-800 transition">🎲 Acak Sandi</button>
+                    </div>
+                    <div class="relative">
+                      <input type="text" name="new_password" id="resetNewPassword" required minlength="6" placeholder="Minimal 6 karakter..." class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-amber-600 focus:ring-2 focus:ring-amber-100 outline-none font-mono transition">
+                    </div>
+                    <p class="text-[11px] text-zinc-400 mt-1.5">Pengguna dapat langsung menggunakan sandi baru ini untuk login.</p>
                   </div>
 
-                  <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="document.getElementById('modalUserResetPassword').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-700">Batal</button>
-                    <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-full shadow-xs transition">
+                  <div class="pt-2 flex justify-end gap-2.5">
+                    <button type="button" onclick="document.getElementById('modalUserResetPassword').classList.add('hidden')" class="px-4 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition cursor-pointer">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md shadow-amber-500/20 transition cursor-pointer">
                       Reset Sandi Sekarang
                     </button>
                   </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- MODAL: HAPUS PENGGUNA -->
+            <div id="modalUserDelete" class="fixed inset-0 bg-zinc-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+              <div class="bg-white rounded-[2rem] max-w-sm w-full shadow-2xl relative overflow-hidden border border-zinc-100 p-6 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </div>
+                
+                <h3 class="font-extrabold text-base text-zinc-900 mb-1">Hapus Pengguna Permanen?</h3>
+                <p class="text-xs text-zinc-500 mb-4">
+                  Akun <strong id="deleteUserNameDisplay" class="text-zinc-900">-</strong> beserta seluruh hak aksesnya akan dihapus permanen.
+                </p>
+
+                <form method="POST" action="" class="flex items-center justify-center gap-2.5">
+                  <input type="hidden" name="action" value="delete_user">
+                  <input type="hidden" name="user_id" id="deleteUserId">
+                  <button type="button" onclick="document.getElementById('modalUserDelete').classList.add('hidden')" class="w-1/2 py-2.5 text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition cursor-pointer">Batal</button>
+                  <button type="submit" class="w-1/2 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md shadow-red-500/20 transition cursor-pointer">Ya, Hapus</button>
                 </form>
               </div>
             </div>
@@ -3008,8 +3068,11 @@ $categoriesList = array_keys($navbarCategories);
       }
 
       // User Management Modals
+      let currentUserForEdit = null;
+
       function openModalUserInfo(user) {
         if (!user) return;
+        currentUserForEdit = user;
         const imgAvatar = document.getElementById('infoAvatar');
         const fallbackAvatar = document.getElementById('infoAvatarFallback');
         if (user.avatar) {
@@ -3031,16 +3094,27 @@ $categoriesList = array_keys($navbarCategories);
         const st = (user.status || 'active').toLowerCase();
         if (st === 'active') {
           statusEl.textContent = 'AKTIF';
-          statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200';
+          statusEl.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200';
         } else if (st === 'inactive') {
           statusEl.textContent = 'NONAKTIF';
-          statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200';
+          statusEl.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200';
         } else if (st === 'blocked') {
           statusEl.textContent = 'DIBLOKIR';
-          statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200';
+          statusEl.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200';
         }
 
-        document.getElementById('infoWhatsapp').textContent = user.whatsapp || '-';
+        const waEl = document.getElementById('infoWhatsapp');
+        const waLink = document.getElementById('infoWaLink');
+        waEl.textContent = user.whatsapp || '-';
+        if (user.whatsapp && user.whatsapp.trim().length > 5) {
+          const cleanWa = user.whatsapp.replace(/\D/g, '');
+          const waPhone = cleanWa.startsWith('0') ? '62' + cleanWa.substring(1) : cleanWa;
+          waLink.href = 'https://wa.me/' + waPhone;
+          waLink.classList.remove('hidden');
+        } else {
+          waLink.classList.add('hidden');
+        }
+
         document.getElementById('infoGender').textContent = user.gender || '-';
         document.getElementById('infoBirthDate').textContent = user.birth_date || '-';
         
@@ -3048,6 +3122,14 @@ $categoriesList = array_keys($navbarCategories);
         document.getElementById('infoLocation').textContent = locParts.length ? locParts.join(', ') : '-';
         document.getElementById('infoAddress').textContent = user.address || '-';
         document.getElementById('infoCreatedAt').textContent = user.created_at || '-';
+
+        const btnEditFromInfo = document.getElementById('btnEditFromInfo');
+        if (btnEditFromInfo) {
+          btnEditFromInfo.onclick = function() {
+            document.getElementById('modalUserInfo').classList.add('hidden');
+            openModalUserEdit(currentUserForEdit);
+          };
+        }
 
         document.getElementById('modalUserInfo').classList.remove('hidden');
       }
@@ -3070,6 +3152,22 @@ $categoriesList = array_keys($navbarCategories);
         document.getElementById('resetUserDisplayName').textContent = (user.name || '') + ' (@' + (user.username || '') + ')';
         document.getElementById('resetNewPassword').value = '';
         document.getElementById('modalUserResetPassword').classList.remove('hidden');
+      }
+
+      function generateRandomPassword() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+        let pwd = 'GNN';
+        for (let i = 0; i < 6; i++) {
+          pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('resetNewPassword').value = pwd;
+      }
+
+      function openModalUserDelete(user) {
+        if (!user) return;
+        document.getElementById('deleteUserId').value = user.id || '';
+        document.getElementById('deleteUserNameDisplay').textContent = (user.name || '') + ' (@' + (user.username || '') + ')';
+        document.getElementById('modalUserDelete').classList.remove('hidden');
       }
     </script>
   <?php endif; ?>
