@@ -1100,13 +1100,10 @@ $categoriesList = array_keys($navbarCategories);
         
         <!-- Sidebar Header: GNN Logo + Close / Collapse Button -->
         <div class="h-[72px] px-4 border-b border-zinc-100 flex items-center justify-between shrink-0">
-          <a href="/" class="flex items-center gap-2.5 overflow-hidden group">
-            <div class="w-9 h-9 rounded-xl bg-[#CC0000] flex items-center justify-center shrink-0 shadow-xs">
+          <a href="/" class="flex items-center overflow-hidden group">
+            <img src="/icon/logoh.png" alt="Good News Nusantara" class="h-9 w-auto object-contain sidebar-text" onerror="this.onerror=null; this.src='/logoh.png';">
+            <div class="w-9 h-9 rounded-xl bg-[#CC0000] flex items-center justify-center shrink-0 shadow-xs hidden" id="sidebarMiniLogo">
               <span class="text-white font-black text-sm tracking-tighter">GNN</span>
-            </div>
-            <div class="sidebar-text flex flex-col leading-none">
-              <span class="text-[13px] font-extrabold tracking-tight italic text-zinc-900 group-hover:text-red-700 transition">Good News</span>
-              <span class="text-[9px] font-black tracking-widest text-white bg-[#CC0000] px-1.5 py-0.5 rounded-xs uppercase mt-0.5 inline-block text-center w-fit">Nusantara</span>
             </div>
           </a>
           <!-- Close button on mobile / Collapse button on desktop -->
@@ -2327,6 +2324,8 @@ $categoriesList = array_keys($navbarCategories);
             userCard.classList.add('justify-center', 'p-1.5');
             userCard.classList.remove('p-2', 'sm:p-2.5');
           }
+          const miniLogo = document.getElementById('sidebarMiniLogo');
+          if (miniLogo) miniLogo.classList.remove('hidden');
           if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
           localStorage.setItem('gnn_sidebar_collapsed', 'true');
         } else {
@@ -2334,6 +2333,8 @@ $categoriesList = array_keys($navbarCategories);
           sidebar.classList.add('w-64');
           sidebar.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
           sidebar.querySelectorAll('nav a').forEach(el => el.classList.remove('justify-center', 'px-2'));
+          const miniLogo = document.getElementById('sidebarMiniLogo');
+          if (miniLogo) miniLogo.classList.add('hidden');
           if (userCard) {
             userCard.classList.remove('justify-center', 'p-1.5');
             userCard.classList.add('p-2', 'sm:p-2.5');
