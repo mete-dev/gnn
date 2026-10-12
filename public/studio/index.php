@@ -498,6 +498,28 @@ $categoriesList = array_keys($navbarCategories);
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   <?php endif; ?>
   <style>
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/RobotoSerif-VariableFont_GRAD,opsz,wdth,wght.ttf') format('truetype-variations'),
+           url('/font/Roboto_Serif/static/RobotoSerif-Regular.ttf') format('truetype');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/static/RobotoSerif-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/static/RobotoSerif-ExtraBold.ttf') format('truetype');
+      font-weight: 800;
+      font-style: normal;
+      font-display: swap;
+    }
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-serif { font-family: 'Roboto Serif', Georgia, serif; }
     .scrollbar-none::-webkit-scrollbar { display: none; }

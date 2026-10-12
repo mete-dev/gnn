@@ -452,6 +452,43 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
     }
   </script>
   <style>
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/RobotoSerif-VariableFont_GRAD,opsz,wdth,wght.ttf') format('truetype-variations'),
+           url('/font/Roboto_Serif/static/RobotoSerif-Regular.ttf') format('truetype');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/static/RobotoSerif-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/static/RobotoSerif-ExtraBold.ttf') format('truetype');
+      font-weight: 800;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/static/RobotoSerif-Black.ttf') format('truetype');
+      font-weight: 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto Serif';
+      src: url('/font/Roboto_Serif/RobotoSerif-Italic-VariableFont_GRAD,opsz,wdth,wght.ttf') format('truetype-variations'),
+           url('/font/Roboto_Serif/static/RobotoSerif-Italic.ttf') format('truetype');
+      font-weight: 100 900;
+      font-style: italic;
+      font-display: swap;
+    }
     .font-serif, h1.font-serif, h2.font-serif, h3.font-serif, .article-title, .story-title, #canvasTextFull, #canvasTextSplit {
       font-family: 'Roboto Serif', Georgia, serif !important;
     }
