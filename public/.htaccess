@@ -6,6 +6,12 @@
   RewriteEngine On
   RewriteBase /
 
+  # Protect Sensitive Files
+  <FilesMatch "\.(json|sql|log)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+
   # Dynamic XML Sitemap
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
 

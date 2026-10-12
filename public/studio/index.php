@@ -6,10 +6,23 @@
 
 session_start();
 require_once __DIR__ . '/../api/config.php';
+require_once __DIR__ . '/../api/google-indexer.php';
 
 header("Content-Type: text/html; charset=UTF-8");
 
 $db = getDBConnection();
+
+if (!function_exists('slugify')) {
+    function slugify($text) {
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text ?? '');
+        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+        $text = preg_replace('~[^-\w]+~', '', $text);
+        $text = trim($text, '-');
+        $text = preg_replace('~-+~', '-', $text);
+        $text = strtolower($text);
+        return empty($text) ? 'artikel' : $text;
+    }
+}
 
 // Ensure settings table exists
 try {
@@ -320,6 +333,18 @@ if ($currentUser) {
                 $stmt->execute([$newId, $title, $category, $subCategory, $location, $image, $caption, $imageCredit, $content, $keywords, $bulletsJson, $author, $currentUser['email'], $status, date('d M Y')]);
                 $msg = "Artikel baru berhasil diterbitkan!";
             }
+
+            // Real-time Instant Indexing to Google if published
+            if (strtolower($status) === 'publish') {
+                try {
+                    $liveArticleUrl = 'https://gnn.web.id/' . slugify($title);
+                    $indexRes = GoogleIndexer::notify($liveArticleUrl, 'URL_UPDATED');
+                    if (!empty($indexRes['success'])) {
+                        $msg .= " (Sinyal Google Indexing API berhasil dikirim!)";
+                    }
+                } catch (Exception $e) {}
+            }
+
             header("Location: /studio/?tab=articles&msg=" . urlencode($msg));
             exit();
         } else {
