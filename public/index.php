@@ -724,8 +724,13 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             <a href="?category=<?= urlencode($article['category']) ?>" class="text-red-700 uppercase"><?= htmlspecialchars($article['category']) ?></a>
           </div>
 
-          <!-- Title -->
-          <h1 class="font-serif font-black text-2xl sm:text-4xl text-zinc-900 leading-tight mb-4">
+          <!-- Red Uppercase Category Tag (Matching Foto Screenshot) -->
+          <span class="text-[#CC0000] font-black text-xs sm:text-sm tracking-wider uppercase block mb-2">
+            <?= htmlspecialchars($article['sub_category'] ?: $article['category']) ?>
+          </span>
+
+          <!-- Title (Clean Sans-Serif Plus Jakarta Sans like screenshot for maximum readability) -->
+          <h1 class="font-sans font-black text-2xl sm:text-4xl text-zinc-900 leading-tight mb-3">
             <?= htmlspecialchars($article['title']) ?>
           </h1>
 
