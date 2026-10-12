@@ -1152,13 +1152,13 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
       <div class="max-w-5xl mx-auto py-4 sm:py-8">
         
         <!-- Header Hero Banner -->
-        <div class="relative overflow-hidden rounded-3xl bg-linear-to-br from-zinc-900 via-zinc-950 to-red-950 p-6 sm:p-10 text-white shadow-xl mb-6 sm:mb-8 border border-zinc-800">
+        <div class="relative overflow-hidden rounded-3xl p-6 sm:p-10 shadow-xl mb-6 sm:mb-8 border border-zinc-800" style="background: linear-gradient(135deg, #09090b 0%, #18181b 50%, #450a0a 100%); color: #ffffff;">
           <div class="relative z-10 max-w-3xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/30 text-red-300 border border-red-500/30 text-[11px] font-bold uppercase tracking-wider mb-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-500/40 text-[11px] font-bold uppercase tracking-wider mb-4" style="background-color: rgba(220, 38, 38, 0.25); color: #fecaca;">
               <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
               Pusat Regulasi &amp; Informasi Publik GNN
             </div>
-            <h1 class="font-serif font-black text-2xl sm:text-4xl text-white tracking-tight leading-tight mb-3">
+            <h1 class="font-serif font-black text-2xl sm:text-4xl tracking-tight leading-tight mb-3" style="color: #ffffff;">
               <?php
                 if ($pageParam === 'pedoman') echo 'Pedoman Pemberitaan Media Siber';
                 elseif ($pageParam === 'aturan') echo 'Aturan &amp; Ketentuan Layanan';
@@ -1168,7 +1168,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                 else echo 'Kontak Iklan &amp; Kerjasama Redaksi';
               ?>
             </h1>
-            <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed">
+            <p class="text-xs sm:text-sm leading-relaxed" style="color: #d4d4d8;">
               Standar profesionalisme, kode etik pers, kepatuhan hukum, dan transparansi Good News Nusantara dalam menyebarkan kabar baik demi membangun optimisme bangsa.
             </p>
           </div>
@@ -1535,7 +1535,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                 <div class="p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
                   <span class="text-[10px] font-bold tracking-wider uppercase text-red-600 bg-red-50 dark:bg-red-950/50 px-2.5 py-1 rounded-full">PIMPINAN</span>
                   <h3 class="font-bold text-lg text-zinc-900 dark:text-white">Pemimpin Umum / Penanggung Jawab</h3>
-                  <p class="text-sm text-zinc-700 dark:text-zinc-300 font-medium">Fadhil Al Anshori</p>
+                  <p class="text-sm text-zinc-700 dark:text-zinc-300 font-medium">Fadhil Al Anshor</p>
                   <p class="text-xs text-zinc-500">Penanggung Jawab Kebijakan Redaksional &amp; Korporasi</p>
                 </div>
 
