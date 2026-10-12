@@ -34,23 +34,40 @@ function slugify($text) {
     return empty($text) ? 'artikel' : $text;
 }
 
-function getSafeArticleImage($img, $category = '', $articleId = '') {
+function getSiteBaseUrl() {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'goodnewsnusantara.my.id';
+    return $protocol . '://' . $host;
+}
+
+function getSafeArticleImage($img, $category = '', $articleId = '', $forSocialMeta = false) {
     $img = trim($img ?? '');
     
-    // If it's a Base64 Data URL, return the direct cover endpoint so social media scrapers get a real image URL
-    if (str_starts_with($img, 'data:image/') && !empty($articleId)) {
-        return 'https://gnn.web.id/api/cover.php?id=' . urlencode($articleId);
+    // If it's a Base64 Data URL:
+    if (str_starts_with($img, 'data:image/')) {
+        // If it's specifically for Social Meta (WhatsApp / Facebook / Twitter cards):
+        if ($forSocialMeta) {
+            $base = getSiteBaseUrl();
+            if (!empty($articleId)) {
+                return $base . '/api/cover.php?id=' . urlencode($articleId);
+            }
+            return $base . '/icon/og-image.png';
+        }
+        // For HTML browser rendering (<img src="...">), return the actual data:image string!
+        return $img;
     }
 
-    if (!empty($img) && strlen($img) > 5 && !str_starts_with($img, 'data:image/')) {
+    if (!empty($img) && strlen($img) > 5) {
         if (preg_match('#^https?://#i', $img)) {
             return $img;
         }
+        $base = getSiteBaseUrl();
         if (str_starts_with($img, '/')) {
-            return 'https://gnn.web.id' . $img;
+            return $base . $img;
         }
-        return 'https://gnn.web.id/' . $img;
+        return $base . '/' . $img;
     }
+
     $defaults = [
         'EKONOMI' => 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
         'SAINTEK' => 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
@@ -311,10 +328,11 @@ if (count($sejarahArticles) < 3) {
 }
 
 // SEO & Social Media Details
+$baseUrl = getSiteBaseUrl();
 $pageTitle = "Good News Nusantara | Jadi Tahu Indonesia";
 $pageDesc = "Good News Nusantara - Berita Positif Nusantara & Jadi Tahu Indonesia. Media informasi kabar baik terpercaya, inovasi lokal anak bangsa, prestasi, kisah inspiratif, budaya, pariwisata, dan potensi kekayaan Indonesia demi membangun optimisme bangsa.";
-$pageImage = "https://gnn.web.id/icon/og-image.png";
-$pageUrl = "https://gnn.web.id/";
+$pageImage = $baseUrl . "/icon/og-image.png";
+$pageUrl = $baseUrl . "/";
 $articlePublishedTime = "";
 $articleModifiedTime = "";
 $articleAuthor = "Redaksi Good News Nusantara";
@@ -333,11 +351,11 @@ if ($article) {
     }
     $pageDesc = mb_substr($cleanDesc, 0, 160) . (mb_strlen($cleanDesc) > 160 ? '...' : '');
     
-    // Safe Absolute Image URL (WhatsApp/Facebook require full https:// URL)
-    $pageImage = getSafeArticleImage($article['image'] ?? '', $article['category'] ?? '', $article['id'] ?? '');
+    // Safe Absolute Image URL (Social Meta Crawler mode: true)
+    $pageImage = getSafeArticleImage($article['image'] ?? '', $article['category'] ?? '', $article['id'] ?? '', true);
     
-    // Canonical Article URL
-    $pageUrl = "https://gnn.web.id/" . slugify($article['title']);
+    // Canonical Article URL using dynamic baseUrl
+    $pageUrl = $baseUrl . "/" . slugify($article['title']);
     
     // Article Metadata
     $articlePublishedTime = !empty($article['created_at']) ? date('c', strtotime($article['created_at'])) : date('c');
@@ -441,8 +459,8 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": "https://gnn.web.id/#website",
-        "url": "https://gnn.web.id/",
+        "@id": "<?= $baseUrl ?>/#website",
+        "url": "<?= $baseUrl ?>/",
         "name": "Good News Nusantara | Jadi Tahu Indonesia",
         "alternateName": ["GNN", "Good News Nusantara", "GNN Indonesia"],
         "description": "Good News Nusantara - Berita Positif Nusantara & Jadi Tahu Indonesia.",
@@ -450,10 +468,10 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
       },
       {
         "@type": "NewsMediaOrganization",
-        "@id": "https://gnn.web.id/#organization",
+        "@id": "<?= $baseUrl ?>/#organization",
         "name": "Good News Nusantara",
-        "url": "https://gnn.web.id/",
-        "logo": "https://gnn.web.id/icon/logow.png",
+        "url": "<?= $baseUrl ?>/",
+        "logo": "<?= $baseUrl ?>/icon/logow.png",
         "slogan": "Jadi Tahu Indonesia"
       }
       <?php if ($article): ?>,
