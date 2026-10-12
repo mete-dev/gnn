@@ -801,6 +801,34 @@ if ($currentUser) {
             $err = "Akses ditolak. Hanya Administrator yang dapat mengubah data pengguna.";
         }
     }
+
+    // Delete User (Administrator only)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_user') {
+        if ($currentUserRole === 'admin') {
+            $targetUserId = trim($_POST['user_id'] ?? '');
+            if (!$targetUserId) {
+                $err = "ID Pengguna tidak valid.";
+            } else {
+                $stmtCheck = $db->prepare("SELECT email, username FROM users WHERE id = ?");
+                $stmtCheck->execute([$targetUserId]);
+                $targetUser = $stmtCheck->fetch();
+                $targetEmail = strtolower($targetUser['email'] ?? '');
+                $targetUsername = strtolower($targetUser['username'] ?? '');
+
+                if ($targetUserId === ($currentUser['id'] ?? '')) {
+                    $err = "Anda tidak dapat menghapus akun Anda sendiri.";
+                } elseif ($targetEmail === 'fadhilalanshor511@gmail.com' || $targetEmail === 'admin@gnn.my.id' || $targetUsername === 'admin') {
+                    $err = "Akun Administrator Utama tidak dapat dihapus.";
+                } else {
+                    $stmtDel = $db->prepare("DELETE FROM users WHERE id = ?");
+                    $stmtDel->execute([$targetUserId]);
+                    $msg = "Pengguna @" . htmlspecialchars($targetUser['username'] ?? '') . " berhasil dihapus secara permanen dari sistem.";
+                }
+            }
+        } else {
+            $err = "Akses ditolak. Hanya Administrator yang dapat menghapus pengguna.";
+        }
+    }
 }
 
 // Data Queries
@@ -2523,6 +2551,16 @@ $categoriesList = array_keys($navbarCategories);
                                     <option value="inactive" <?= $uStatus === 'inactive' ? 'selected' : '' ?>>🟡 Nonaktifkan</option>
                                     <option value="blocked" <?= $uStatus === 'blocked' ? 'selected' : '' ?>>🔴 Blokir Akses</option>
                                   </select>
+                                </form>
+
+                                <!-- Tombol Hapus Pengguna Permanen (Admin only) -->
+                                <form method="POST" action="" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna @<?= htmlspecialchars($u['username']) ?> secara permanen? Data yang telah dihapus tidak dapat dipulihkan.');">
+                                  <input type="hidden" name="action" value="delete_user">
+                                  <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
+                                  <button type="submit" class="px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-200 transition inline-flex items-center gap-1 text-[11px] font-bold cursor-pointer" title="Hapus Pengguna Secara Permanen">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    <span>Hapus</span>
+                                  </button>
                                 </form>
                               <?php endif; ?>
                             <?php endif; ?>
