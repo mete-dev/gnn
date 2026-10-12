@@ -396,6 +396,143 @@ if ($currentUser) {
         }
     }
 
+    // Backup Data Download (JSON Export)
+    if (isset($_GET['action']) && $_GET['action'] === 'download_backup') {
+        if (($currentUser['role'] ?? '') === 'admin') {
+            try {
+                $backupData = [
+                    'site' => 'Good News Nusantara',
+                    'exported_at' => date('Y-m-d H:i:s'),
+                    'version' => '1.0',
+                    'articles' => $db->query("SELECT * FROM articles")->fetchAll(PDO::FETCH_ASSOC),
+                    'videos' => $db->query("SELECT * FROM videos")->fetchAll(PDO::FETCH_ASSOC),
+                    'gallery' => $db->query("SELECT * FROM gallery")->fetchAll(PDO::FETCH_ASSOC),
+                    'users' => $db->query("SELECT id, username, email, name, role, avatar, status, created_at FROM users")->fetchAll(PDO::FETCH_ASSOC),
+                    'comments' => $db->query("SELECT * FROM comments")->fetchAll(PDO::FETCH_ASSOC),
+                    'settings' => $db->query("SELECT * FROM settings")->fetchAll(PDO::FETCH_ASSOC)
+                ];
+
+                $filename = 'gnn-backup-' . date('Ymd-His') . '.json';
+                header('Content-Type: application/json; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+                echo json_encode($backupData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                exit();
+            } catch (Exception $e) {
+                $err = "Gagal membuat berkas cadangan: " . $e->getMessage();
+            }
+        } else {
+            $err = "Hanya Administrator yang berhak mengunduh cadangan data.";
+        }
+    }
+
+    // Restore Data Upload (JSON Import)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'restore_data') {
+        if (($currentUser['role'] ?? '') === 'admin') {
+            if (isset($_FILES['backup_file']) && $_FILES['backup_file']['error'] === UPLOAD_ERR_OK) {
+                $uploadedContent = file_get_contents($_FILES['backup_file']['tmp_name']);
+                $backup = json_decode($uploadedContent, true);
+
+                if ($backup && is_array($backup) && (isset($backup['articles']) || isset($backup['site']))) {
+                    try {
+                        $mode = $_POST['restore_mode'] ?? 'merge'; // 'merge' or 'replace'
+                        $importedCounts = [];
+
+                        // 1. Articles
+                        if (!empty($backup['articles']) && is_array($backup['articles'])) {
+                            if ($mode === 'replace') {
+                                $db->exec("DELETE FROM articles");
+                            }
+                            $stmtArt = $db->prepare("REPLACE INTO articles (id, category, sub_category, title, content, image, caption, breaking, featured, popular_rank, bullets, date, time_ago, author, author_email, editor, location, likes, views, keywords, image_credit, is_photo_gallery, photo_count, video_duration, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $count = 0;
+                            foreach ($backup['articles'] as $row) {
+                                if (empty($row['id']) || empty($row['title'])) continue;
+                                $stmtArt->execute([
+                                    $row['id'], $row['category'] ?? 'EKONOMI', $row['sub_category'] ?? '', $row['title'], $row['content'] ?? '',
+                                    $row['image'] ?? '', $row['caption'] ?? '', $row['breaking'] ?? 0, $row['featured'] ?? 0, $row['popular_rank'] ?? 0,
+                                    $row['bullets'] ?? '[]', $row['date'] ?? date('d M Y'), $row['time_ago'] ?? 'Baru saja', $row['author'] ?? 'Redaksi GNN',
+                                    $row['author_email'] ?? '', $row['editor'] ?? 'Tim Redaksi GNN', $row['location'] ?? 'Good News Nusantara',
+                                    $row['likes'] ?? 0, $row['views'] ?? 0, $row['keywords'] ?? '', $row['image_credit'] ?? '',
+                                    $row['is_photo_gallery'] ?? 0, $row['photo_count'] ?? 0, $row['video_duration'] ?? '',
+                                    $row['status'] ?? 'publish', $row['created_at'] ?? date('Y-m-d H:i:s'), $row['updated_at'] ?? date('Y-m-d H:i:s')
+                                ]);
+                                $count++;
+                            }
+                            $importedCounts[] = "$count artikel";
+                        }
+
+                        // 2. Videos
+                        if (!empty($backup['videos']) && is_array($backup['videos'])) {
+                            if ($mode === 'replace') {
+                                $db->exec("DELETE FROM videos");
+                            }
+                            $stmtVid = $db->prepare("REPLACE INTO videos (id, title, youtube_url, youtube_id, description, category, sub_category, author, author_email, date, duration, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $count = 0;
+                            foreach ($backup['videos'] as $row) {
+                                if (empty($row['id']) || empty($row['title'])) continue;
+                                $stmtVid->execute([
+                                    $row['id'], $row['title'], $row['youtube_url'] ?? '', $row['youtube_id'] ?? '',
+                                    $row['description'] ?? '', $row['category'] ?? 'EKONOMI', $row['sub_category'] ?? 'Ekonomi',
+                                    $row['author'] ?? 'Tim Studio GNN', $row['author_email'] ?? '', $row['date'] ?? date('d M Y'),
+                                    $row['duration'] ?? '03:45', $row['created_at'] ?? date('Y-m-d H:i:s')
+                                ]);
+                                $count++;
+                            }
+                            $importedCounts[] = "$count video";
+                        }
+
+                        // 3. Gallery
+                        if (!empty($backup['gallery']) && is_array($backup['gallery'])) {
+                            if ($mode === 'replace') {
+                                $db->exec("DELETE FROM gallery");
+                            }
+                            $stmtGal = $db->prepare("REPLACE INTO gallery (id, title, image_url, file_size_kb, caption, author, author_email, date, used_count, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $count = 0;
+                            foreach ($backup['gallery'] as $row) {
+                                if (empty($row['id']) || empty($row['image_url'])) continue;
+                                $stmtGal->execute([
+                                    $row['id'], $row['title'] ?? 'Dokumentasi', $row['image_url'],
+                                    $row['file_size_kb'] ?? 0, $row['caption'] ?? '', $row['author'] ?? 'Redaksi',
+                                    $row['author_email'] ?? '', $row['date'] ?? date('d M Y'),
+                                    $row['used_count'] ?? 0, $row['created_at'] ?? date('Y-m-d H:i:s')
+                                ]);
+                                $count++;
+                            }
+                            $importedCounts[] = "$count foto galeri";
+                        }
+
+                        // 4. Users
+                        if (!empty($backup['users']) && is_array($backup['users'])) {
+                            $stmtUsr = $db->prepare("INSERT INTO users (id, username, email, name, role, avatar, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), role=VALUES(role)");
+                            $count = 0;
+                            foreach ($backup['users'] as $row) {
+                                if (empty($row['id']) || empty($row['email'])) continue;
+                                $stmtUsr->execute([
+                                    $row['id'], $row['username'] ?? explode('@', $row['email'])[0],
+                                    $row['email'], $row['name'] ?? 'Penulis GNN', $row['role'] ?? 'sahabat',
+                                    $row['avatar'] ?? '', $row['status'] ?? 'active', $row['created_at'] ?? date('Y-m-d H:i:s')
+                                ]);
+                                $count++;
+                            }
+                            $importedCounts[] = "$count pengguna";
+                        }
+
+                        $msg = "Pemulihan data (Restore) berhasil! Data diproses: " . implode(', ', $importedCounts) . ".";
+                    } catch (Exception $e) {
+                        $err = "Gagal memulihkan database: " . $e->getMessage();
+                    }
+                } else {
+                    $err = "Berkas cadangan tidak valid atau format JSON salah.";
+                }
+            } else {
+                $err = "Silakan pilih berkas cadangan (.json) yang ingin dipulihkan.";
+            }
+        } else {
+            $err = "Hanya Administrator yang berhak memulihkan data.";
+        }
+    }
+
     // Save Settings
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_settings') {
         $newClientId = trim($_POST['google_client_id'] ?? '');
@@ -2020,29 +2157,126 @@ $categoriesList = array_keys($navbarCategories);
               </div>
             </div>
 
-          <!-- TAB: PENGATURAN -->
+          <!-- TAB: PENGATURAN & BACKUP/RESTORE -->
           <?php elseif ($tab === 'settings'): ?>
-            <div class="max-w-2xl bg-white rounded-3xl border border-zinc-200/80 shadow-xs p-6 sm:p-8">
-              <h2 class="font-extrabold text-xl text-zinc-900 mb-6 pb-3 border-b border-zinc-100">
-                Pengaturan Studio & Integrasi Google
-              </h2>
-
-              <form method="POST" action="" class="space-y-5">
-                <input type="hidden" name="action" value="save_settings">
-
-                <div>
-                  <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1.5">Google OAuth Client ID</label>
-                  <p class="text-[11px] text-zinc-500 mb-2">Digunakan untuk login otomatis menggunakan tombol "Masuk dengan Google" melalui Google Identity Services (GIS).</p>
-                  <input type="text" name="google_client_id" value="<?= htmlspecialchars($googleClientId) ?>" placeholder="Contoh: xxxxx-xxxxx.apps.googleusercontent.com" class="w-full px-4 py-2.5 text-xs font-mono border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none">
+            <div class="max-w-4xl space-y-6">
+              
+              <!-- SECTION 1: CADANGAN DATA (BACKUP) -->
+              <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-5 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-5 border-b border-zinc-100">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    </div>
+                    <div>
+                      <h2 class="font-extrabold text-lg text-zinc-900 tracking-tight">Cadangkan Data (Backup)</h2>
+                      <p class="text-xs text-zinc-500">Ekspor seluruh artikel, berita, galeri foto, video, dan pengguna ke berkas aman JSON.</p>
+                    </div>
+                  </div>
+                  <a href="?action=download_backup" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-full shadow-xs transition flex items-center justify-center gap-2 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Unduh Cadangan (.JSON)</span>
+                  </a>
                 </div>
 
-                <div class="pt-4 border-t border-zinc-100 flex items-center justify-between">
-                  <span class="text-xs text-zinc-400">Database: MySQL Ready (cPanel)</span>
-                  <button type="submit" class="px-6 py-2.5 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-xs transition uppercase tracking-wider">
-                    Simpan Pengaturan
-                  </button>
+                <!-- Backup Stats Summary -->
+                <?php
+                  $cntArticles = (int)$db->query("SELECT COUNT(*) FROM articles")->fetchColumn();
+                  $cntGallery = (int)$db->query("SELECT COUNT(*) FROM gallery")->fetchColumn();
+                  $cntVideos = (int)$db->query("SELECT COUNT(*) FROM videos")->fetchColumn();
+                  $cntUsers = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+                ?>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  <div class="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <div class="text-xs text-zinc-400 font-bold uppercase">Artikel</div>
+                    <div class="text-base font-extrabold text-zinc-900 mt-0.5"><?= number_format($cntArticles) ?></div>
+                  </div>
+                  <div class="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <div class="text-xs text-zinc-400 font-bold uppercase">Galeri Foto</div>
+                    <div class="text-base font-extrabold text-zinc-900 mt-0.5"><?= number_format($cntGallery) ?></div>
+                  </div>
+                  <div class="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <div class="text-xs text-zinc-400 font-bold uppercase">Video</div>
+                    <div class="text-base font-extrabold text-zinc-900 mt-0.5"><?= number_format($cntVideos) ?></div>
+                  </div>
+                  <div class="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <div class="text-xs text-zinc-400 font-bold uppercase">Pengguna</div>
+                    <div class="text-base font-extrabold text-zinc-900 mt-0.5"><?= number_format($cntUsers) ?></div>
+                  </div>
                 </div>
-              </form>
+              </div>
+
+              <!-- SECTION 2: PEMULIHAN DATA (RESTORE) -->
+              <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-5 sm:p-8">
+                <div class="flex items-center gap-3 pb-4 mb-5 border-b border-zinc-100">
+                  <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  </div>
+                  <div>
+                    <h2 class="font-extrabold text-lg text-zinc-900 tracking-tight">Pulihkan Data (Restore)</h2>
+                    <p class="text-xs text-zinc-500">Unggah berkas cadangan JSON yang pernah Anda unduh sebelumnya untuk memulihkan database.</p>
+                  </div>
+                </div>
+
+                <form method="POST" action="" enctype="multipart/form-data" class="space-y-4" onsubmit="return confirm('Apakah Anda yakin ingin memulihkan data? Pastikan file backup berasal dari sumber yang terpercaya.');">
+                  <input type="hidden" name="action" value="restore_data">
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1.5">Pilih Berkas Cadangan (.JSON) *</label>
+                    <input type="file" name="backup_file" accept=".json,application/json" required class="w-full px-3.5 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:border-blue-600 outline-none file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1.5">Metode Pemulihan</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label class="p-3 border border-zinc-200 rounded-xl flex items-start gap-2.5 cursor-pointer hover:border-blue-300 transition">
+                        <input type="radio" name="restore_mode" value="merge" checked class="mt-0.5 text-blue-600">
+                        <div class="text-xs">
+                          <span class="font-bold text-zinc-900 block">Gabungkan (Merge & Update)</span>
+                          <span class="text-zinc-500 text-[11px]">Memperbarui data yang cocok dan menambahkan data baru tanpa menghapus data lain yang ada. (Aman)</span>
+                        </div>
+                      </label>
+                      <label class="p-3 border border-red-200 bg-red-50/30 rounded-xl flex items-start gap-2.5 cursor-pointer hover:border-red-300 transition">
+                        <input type="radio" name="restore_mode" value="replace" class="mt-0.5 text-red-600">
+                        <div class="text-xs">
+                          <span class="font-bold text-red-700 block">Ganti Total (Replace All)</span>
+                          <span class="text-zinc-500 text-[11px]">Mengosongkan database saat ini dan menggantinya seluruhnya dengan data cadangan. (Hati-hati)</span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="pt-3 flex justify-end">
+                    <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full shadow-xs transition uppercase tracking-wider">
+                      Mulai Pemulihan Data
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- SECTION 3: PENGATURAN GOOGLE CLIENT ID -->
+              <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-5 sm:p-8">
+                <h3 class="font-extrabold text-base text-zinc-900 mb-4 pb-2 border-b border-zinc-100">
+                  Integrasi Google OAuth & API
+                </h3>
+
+                <form method="POST" action="" class="space-y-4">
+                  <input type="hidden" name="action" value="save_settings">
+
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1.5">Google OAuth Client ID</label>
+                    <input type="text" name="google_client_id" value="<?= htmlspecialchars($googleClientId) ?>" placeholder="Contoh: xxxxx-xxxxx.apps.googleusercontent.com" class="w-full px-4 py-2.5 text-xs font-mono border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none">
+                    <p class="text-[11px] text-zinc-400 mt-1">Digunakan untuk tombol masuk otomatis "Masuk dengan Google".</p>
+                  </div>
+
+                  <div class="pt-2 flex justify-end">
+                    <button type="submit" class="px-6 py-2.5 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-xs transition uppercase tracking-wider">
+                      Simpan Client ID
+                    </button>
+                  </div>
+                </form>
+              </div>
+
             </div>
           <?php endif; ?>
 
