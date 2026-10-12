@@ -264,41 +264,136 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 $currentUser = $_SESSION['gnn_user'] ?? null;
-if ($currentUser && (strtolower($currentUser['email'] ?? '') === 'fadhilalanshor511@gmail.com' || strtolower($currentUser['email'] ?? '') === 'admin@gnn.my.id')) {
-    $currentUser['role'] = 'admin';
-    $_SESSION['gnn_user']['role'] = 'admin';
+$userRecord = null;
+$isProfileIncomplete = false;
+
+if ($currentUser) {
+    if (strtolower($currentUser['email'] ?? '') === 'fadhilalanshor511@gmail.com' || strtolower($currentUser['email'] ?? '') === 'admin@gnn.my.id') {
+        $currentUser['role'] = 'admin';
+        $_SESSION['gnn_user']['role'] = 'admin';
+    }
+
+    try {
+        $stmtCurrUsr = $db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmtCurrUsr->execute([$currentUser['id']]);
+        $userRecord = $stmtCurrUsr->fetch();
+        if ($userRecord) {
+            $currentUserRole = strtolower($userRecord['role'] ?? 'sahabat');
+            $currentUser['role'] = $currentUserRole;
+            $_SESSION['gnn_user']['role'] = $currentUserRole;
+            
+            // Cek apakah akun belum melengkapi data pendaftaran (khususnya akun Google / non-admin)
+            if ($currentUserRole !== 'admin') {
+                if (empty($userRecord['whatsapp']) || empty($userRecord['address']) || empty($userRecord['city'])) {
+                    $isProfileIncomplete = true;
+                }
+            }
+        }
+    } catch (Exception $e) {}
 }
 
-// Tab Routing
+$currentUserRole = strtolower($currentUser['role'] ?? 'sahabat');
+
+// Tab Routing & Hak Akses Tab
 $tab = $_GET['tab'] ?? 'articles';
 $filterStatus = $_GET['status'] ?? 'all';
 $filterCategory = trim($_GET['category'] ?? 'all');
 $searchQuery = trim($_GET['q'] ?? '');
 
+// Batasi akses tab sesuai peran:
+// - Sahabat: hanya boleh 'articles' & 'write'
+// - Reviewer: hanya boleh 'articles' & 'write' (hanya akses penulisan & kurasi artikel)
+// - Admin: full akses ke semua tab
+$allowedTabs = ['articles', 'write'];
+if ($currentUserRole === 'admin') {
+    $allowedTabs = ['articles', 'write', 'gallery', 'videos', 'users', 'settings'];
+}
+if (!in_array($tab, $allowedTabs)) {
+    $tab = 'articles';
+}
+
 // Actions requiring login
 if ($currentUser) {
-    // Delete Article
+    // 1. Lengkapi Data Pendaftaran Akun Google / Penulis
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'complete_google_profile') {
+        $name = trim($_POST['name'] ?? ($currentUser['name'] ?? ''));
+        $whatsapp = trim($_POST['whatsapp'] ?? '');
+        $gender = trim($_POST['gender'] ?? 'Laki-laki');
+        $birthDate = trim($_POST['birth_date'] ?? '');
+        $province = trim($_POST['province'] ?? '');
+        $city = trim($_POST['city'] ?? '');
+        $address = trim($_POST['address'] ?? '');
+
+        if (!$name || !$whatsapp || !$address || !$city) {
+            $err = "Mohon lengkapi Nama, Nomor WhatsApp, Kota/Kabupaten, dan Alamat Domisili Anda.";
+        } else {
+            try {
+                $stmtUpdProf = $db->prepare("UPDATE users SET name = ?, whatsapp = ?, gender = ?, birth_date = ?, province = ?, city = ?, address = ? WHERE id = ?");
+                $stmtUpdProf->execute([$name, $whatsapp, $gender, $birthDate, $province, $city, $address, $currentUser['id']]);
+                $_SESSION['gnn_user']['name'] = $name;
+                $isProfileIncomplete = false;
+                header("Location: /studio/?msg=" . urlencode("Data pendaftaran berhasil dilengkapi! Selamat berkarya di Good News Nusantara."));
+                exit();
+            } catch (Exception $e) {
+                $err = "Gagal menyimpan data profil: " . $e->getMessage();
+            }
+        }
+    }
+
+    // 2. Delete Article
     if (isset($_GET['delete_art'])) {
         $delId = $_GET['delete_art'];
-        $db->prepare("DELETE FROM articles WHERE id = ?")->execute([$delId]);
-        header("Location: /studio/?tab=articles&msg=" . urlencode("Artikel berhasil dihapus."));
-        exit();
+        if ($currentUserRole === 'admin') {
+            $db->prepare("DELETE FROM articles WHERE id = ?")->execute([$delId]);
+            header("Location: /studio/?tab=articles&msg=" . urlencode("Artikel berhasil dihapus."));
+            exit();
+        } elseif ($currentUserRole === 'sahabat') {
+            // Sahabat hanya dapat menghapus draf karya sendiri
+            $stmtChkDel = $db->prepare("SELECT id FROM articles WHERE id = ? AND (LOWER(author_email) = ? OR author = ?)");
+            $stmtChkDel->execute([$delId, strtolower($currentUser['email']), $currentUser['name']]);
+            if ($stmtChkDel->fetch()) {
+                $db->prepare("DELETE FROM articles WHERE id = ?")->execute([$delId]);
+                header("Location: /studio/?tab=articles&msg=" . urlencode("Artikel berhasil dihapus."));
+                exit();
+            } else {
+                $err = "Anda hanya berhak menghapus artikel karya Anda sendiri.";
+            }
+        } elseif ($currentUserRole === 'reviewer') {
+            // Reviewer dapat menghapus artikel karyanya atau karya sahabat
+            $stmtChkDel = $db->prepare("SELECT id FROM articles WHERE id = ? AND (LOWER(author_email) = ? OR author = ? OR author_email IN (SELECT email FROM users WHERE role = 'sahabat') OR author_email IS NULL OR author_email = '')");
+            $stmtChkDel->execute([$delId, strtolower($currentUser['email']), $currentUser['name']]);
+            if ($stmtChkDel->fetch()) {
+                $db->prepare("DELETE FROM articles WHERE id = ?")->execute([$delId]);
+                header("Location: /studio/?tab=articles&msg=" . urlencode("Artikel berhasil dihapus."));
+                exit();
+            } else {
+                $err = "Anda tidak berhak menghapus artikel ini.";
+            }
+        }
     }
 
     // Delete Video
     if (isset($_GET['delete_vid'])) {
-        $delId = $_GET['delete_vid'];
-        $db->prepare("DELETE FROM videos WHERE id = ?")->execute([$delId]);
-        header("Location: /studio/?tab=videos&msg=" . urlencode("Video berhasil dihapus."));
-        exit();
+        if ($currentUserRole === 'admin') {
+            $delId = $_GET['delete_vid'];
+            $db->prepare("DELETE FROM videos WHERE id = ?")->execute([$delId]);
+            header("Location: /studio/?tab=videos&msg=" . urlencode("Video berhasil dihapus."));
+            exit();
+        } else {
+            $err = "Akses ditolak.";
+        }
     }
 
     // Delete Gallery
     if (isset($_GET['delete_gal'])) {
-        $delId = $_GET['delete_gal'];
-        $db->prepare("DELETE FROM gallery WHERE id = ?")->execute([$delId]);
-        header("Location: /studio/?tab=gallery&msg=" . urlencode("Foto galeri berhasil dihapus."));
-        exit();
+        if ($currentUserRole === 'admin') {
+            $delId = $_GET['delete_gal'];
+            $db->prepare("DELETE FROM gallery WHERE id = ?")->execute([$delId]);
+            header("Location: /studio/?tab=gallery&msg=" . urlencode("Foto galeri berhasil dihapus."));
+            exit();
+        } else {
+            $err = "Akses ditolak.";
+        }
     }
 
     // Save Article (Create or Edit)
@@ -313,9 +408,41 @@ if ($currentUser) {
         $imageCredit = trim($_POST['image_credit'] ?? '');
         $content = trim($_POST['content'] ?? '');
         $keywords = trim($_POST['keywords'] ?? '');
-        $author = trim($_POST['author'] ?? $currentUser['name']);
         $bulletsText = trim($_POST['bullets'] ?? '');
         $status = $_POST['status'] ?? 'publish';
+
+        // Penegakan Aturan Hak Akses Berdasarkan Peran (Role):
+        // 1. Sahabat: Hanya bisa menulis artikel dan menyimpannya sebagai draft
+        if ($currentUserRole === 'sahabat') {
+            $status = 'draft';
+            $author = $currentUser['name'];
+            $authorEmail = $currentUser['email'];
+        } elseif ($currentUserRole === 'reviewer') {
+            // 2. Reviewer: Bisa mempublikasi karyanya sendiri & mempublikasikan karya sahabat
+            $author = trim($_POST['author'] ?? $currentUser['name']);
+            $authorEmail = $currentUser['email'];
+            if ($artId) {
+                $stmtOrig = $db->prepare("SELECT author, author_email FROM articles WHERE id = ?");
+                $stmtOrig->execute([$artId]);
+                $origArt = $stmtOrig->fetch();
+                if ($origArt) {
+                    $author = $origArt['author'];
+                    $authorEmail = $origArt['author_email'];
+                }
+            }
+        } else {
+            // 3. Admin: Full akses
+            $author = trim($_POST['author'] ?? $currentUser['name']);
+            $authorEmail = $currentUser['email'];
+            if ($artId) {
+                $stmtOrig = $db->prepare("SELECT author, author_email FROM articles WHERE id = ?");
+                $stmtOrig->execute([$artId]);
+                $origArt = $stmtOrig->fetch();
+                if ($origArt && !empty($origArt['author_email'])) {
+                    $authorEmail = $origArt['author_email'];
+                }
+            }
+        }
 
         $bulletsArr = array_filter(array_map('trim', explode("\n", $bulletsText)));
         $bulletsJson = json_encode(array_values($bulletsArr));
@@ -330,26 +457,46 @@ if ($currentUser) {
                         $autoGalId = 'gal-' . time() . '-' . rand(10, 99);
                         $galTitle = $caption ?: $title;
                         $db->prepare("INSERT INTO gallery (id, title, image_url, caption, author, author_email, date) VALUES (?, ?, ?, ?, ?, ?, ?)")
-                           ->execute([$autoGalId, $galTitle, $image, $caption, $author, $currentUser['email'], date('d M Y')]);
+                           ->execute([$autoGalId, $galTitle, $image, $caption, $author, $authorEmail, date('d M Y')]);
                     }
                 } catch (Exception $e) {}
             }
 
             if ($artId) {
-                // Update
-                $stmt = $db->prepare("UPDATE articles SET title=?, category=?, sub_category=?, location=?, image=?, caption=?, image_credit=?, content=?, keywords=?, bullets=?, author=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?");
-                $stmt->execute([$title, $category, $subCategory, $location, $image, $caption, $imageCredit, $content, $keywords, $bulletsJson, $author, $status, $artId]);
-                $msg = "Artikel berhasil diperbarui!";
+                // Verifikasi izin mengedit artikel
+                $canUpdate = false;
+                if ($currentUserRole === 'admin') {
+                    $canUpdate = true;
+                } elseif ($currentUserRole === 'sahabat') {
+                    $stmtChkOwn = $db->prepare("SELECT id FROM articles WHERE id = ? AND (LOWER(author_email) = ? OR author = ?)");
+                    $stmtChkOwn->execute([$artId, strtolower($currentUser['email']), $currentUser['name']]);
+                    if ($stmtChkOwn->fetch()) $canUpdate = true;
+                } elseif ($currentUserRole === 'reviewer') {
+                    // Reviewer dapat mengedit karya sendiri atau karya sahabat
+                    $stmtChkRev = $db->prepare("SELECT id FROM articles WHERE id = ? AND (LOWER(author_email) = ? OR author = ? OR author_email IN (SELECT email FROM users WHERE role = 'sahabat') OR author_email IS NULL OR author_email = '')");
+                    $stmtChkRev->execute([$artId, strtolower($currentUser['email']), $currentUser['name']]);
+                    if ($stmtChkRev->fetch()) $canUpdate = true;
+                }
+
+                if ($canUpdate) {
+                    $editorName = ($currentUserRole === 'reviewer' || $currentUserRole === 'admin') ? $currentUser['name'] : 'Tim Redaksi GNN';
+                    $stmt = $db->prepare("UPDATE articles SET title=?, category=?, sub_category=?, location=?, image=?, caption=?, image_credit=?, content=?, keywords=?, bullets=?, author=?, editor=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?");
+                    $stmt->execute([$title, $category, $subCategory, $location, $image, $caption, $imageCredit, $content, $keywords, $bulletsJson, $author, $editorName, $status, $artId]);
+                    $msg = ($status === 'draft') ? "Artikel berhasil disimpan sebagai Draft!" : "Artikel berhasil diperbarui dan dipublikasikan!";
+                } else {
+                    $err = "Anda tidak berhak mengedit artikel ini.";
+                }
             } else {
-                // Insert
+                // Insert artikel baru
                 $newId = 'gnn-' . time();
-                $stmt = $db->prepare("INSERT INTO articles (id, title, category, sub_category, location, image, caption, image_credit, content, keywords, bullets, author, author_email, editor, likes, views, status, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Tim Redaksi GNN', 0, 0, ?, ?)");
-                $stmt->execute([$newId, $title, $category, $subCategory, $location, $image, $caption, $imageCredit, $content, $keywords, $bulletsJson, $author, $currentUser['email'], $status, date('d M Y')]);
-                $msg = "Artikel baru berhasil diterbitkan!";
+                $editorName = ($currentUserRole === 'reviewer' || $currentUserRole === 'admin') ? $currentUser['name'] : 'Menunggu Reviewer';
+                $stmt = $db->prepare("INSERT INTO articles (id, title, category, sub_category, location, image, caption, image_credit, content, keywords, bullets, author, author_email, editor, likes, views, status, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?)");
+                $stmt->execute([$newId, $title, $category, $subCategory, $location, $image, $caption, $imageCredit, $content, $keywords, $bulletsJson, $author, $authorEmail, $editorName, $status, date('d M Y')]);
+                $msg = ($status === 'draft') ? "Artikel berhasil disimpan sebagai Draft untuk ditinjau oleh Reviewer!" : "Artikel baru berhasil diterbitkan!";
             }
 
-            // Real-time Instant Indexing to Google if published
-            if (strtolower($status) === 'publish') {
+            // Real-time Instant Indexing to Google jika diterbitkan
+            if (strtolower($status) === 'publish' && empty($err)) {
                 try {
                     $liveArticleUrl = 'https://gnn.web.id/' . slugify($title);
                     $indexRes = GoogleIndexer::notify($liveArticleUrl, 'URL_UPDATED');
@@ -359,8 +506,10 @@ if ($currentUser) {
                 } catch (Exception $e) {}
             }
 
-            header("Location: /studio/?tab=articles&msg=" . urlencode($msg));
-            exit();
+            if (empty($err)) {
+                header("Location: /studio/?tab=articles&msg=" . urlencode($msg));
+                exit();
+            }
         } else {
             $err = "Judul dan isi artikel wajib diisi.";
         }
@@ -663,12 +812,32 @@ $editArticle = null;
 $totalArticlesCount = 0;
 
 if ($currentUser) {
-    // Count total articles
-    $totalArticlesCount = (int)$db->query("SELECT COUNT(*) FROM articles")->fetchColumn();
-
-    // Query articles with search & filter
+    // 1. Hitung total artikel & filter daftar sesuai Peran (Role)
     $artSql = "SELECT * FROM articles WHERE 1=1";
     $artParams = [];
+
+    if ($currentUserRole === 'sahabat') {
+        // Sahabat: hanya melihat artikel karyanya sendiri
+        $artSql .= " AND (LOWER(author_email) = ? OR author = ?)";
+        $artParams[] = strtolower($currentUser['email']);
+        $artParams[] = $currentUser['name'];
+
+        $stmtCnt = $db->prepare("SELECT COUNT(*) FROM articles WHERE LOWER(author_email) = ? OR author = ?");
+        $stmtCnt->execute([strtolower($currentUser['email']), $currentUser['name']]);
+        $totalArticlesCount = (int)$stmtCnt->fetchColumn();
+    } elseif ($currentUserRole === 'reviewer') {
+        // Reviewer: melihat artikel karyanya sendiri + artikel dari para Sahabat penulis
+        $artSql .= " AND (LOWER(author_email) = ? OR author = ? OR author_email IN (SELECT email FROM users WHERE role = 'sahabat') OR author_email IS NULL OR author_email = '')";
+        $artParams[] = strtolower($currentUser['email']);
+        $artParams[] = $currentUser['name'];
+
+        $stmtCnt = $db->prepare("SELECT COUNT(*) FROM articles WHERE LOWER(author_email) = ? OR author = ? OR author_email IN (SELECT email FROM users WHERE role = 'sahabat') OR author_email IS NULL OR author_email = ''");
+        $stmtCnt->execute([strtolower($currentUser['email']), $currentUser['name']]);
+        $totalArticlesCount = (int)$stmtCnt->fetchColumn();
+    } else {
+        // Administrator: Full akses melihat seluruh artikel
+        $totalArticlesCount = (int)$db->query("SELECT COUNT(*) FROM articles")->fetchColumn();
+    }
 
     if ($filterStatus && $filterStatus !== 'all') {
         $artSql .= " AND status = ?";
@@ -693,32 +862,59 @@ if ($currentUser) {
     $stmtArt = $db->prepare($artSql);
     $stmtArt->execute($artParams);
     $articles = $stmtArt->fetchAll();
-    if ($tab === 'videos' && $searchQuery) {
-        $stmtVid = $db->prepare("SELECT * FROM videos WHERE title LIKE ? OR description LIKE ? OR category LIKE ? ORDER BY created_at DESC");
-        $stmtVid->execute(["%$searchQuery%", "%$searchQuery%", "%$searchQuery%"]);
-        $videos = $stmtVid->fetchAll();
-    } else {
-        $videos = $db->query("SELECT * FROM videos ORDER BY created_at DESC")->fetchAll();
-    }
 
-    if ($tab === 'gallery' && $searchQuery) {
-        $stmtGal = $db->prepare("SELECT * FROM gallery WHERE title LIKE ? OR caption LIKE ? OR author LIKE ? ORDER BY created_at DESC");
-        $stmtGal->execute(["%$searchQuery%", "%$searchQuery%", "%$searchQuery%"]);
-        $gallery = $stmtGal->fetchAll();
-    } else {
-        $gallery = $db->query("SELECT * FROM gallery ORDER BY created_at DESC")->fetchAll();
-    }
+    if ($currentUserRole === 'admin') {
+        if ($tab === 'videos' && $searchQuery) {
+            $stmtVid = $db->prepare("SELECT * FROM videos WHERE title LIKE ? OR description LIKE ? OR category LIKE ? ORDER BY created_at DESC");
+            $stmtVid->execute(["%$searchQuery%", "%$searchQuery%", "%$searchQuery%"]);
+            $videos = $stmtVid->fetchAll();
+        } else {
+            $videos = $db->query("SELECT * FROM videos ORDER BY created_at DESC")->fetchAll();
+        }
 
-    $users = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll();
+        if ($tab === 'gallery' && $searchQuery) {
+            $stmtGal = $db->prepare("SELECT * FROM gallery WHERE title LIKE ? OR caption LIKE ? OR author LIKE ? ORDER BY created_at DESC");
+            $stmtGal->execute(["%$searchQuery%", "%$searchQuery%", "%$searchQuery%"]);
+            $gallery = $stmtGal->fetchAll();
+        } else {
+            $gallery = $db->query("SELECT * FROM gallery ORDER BY created_at DESC")->fetchAll();
+        }
+
+        $users = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll();
+    }
 
     if (isset($_GET['edit_art'])) {
         $stmtEdit = $db->prepare("SELECT * FROM articles WHERE id = ?");
         $stmtEdit->execute([$_GET['edit_art']]);
         $editArticle = $stmtEdit->fetch();
         if ($editArticle) {
-            $tab = 'write';
-            $editBullets = json_decode($editArticle['bullets'] ?: '[]', true);
-            $editArticle['bullets_text'] = is_array($editBullets) ? implode("\n", $editBullets) : '';
+            $canEdit = true;
+            if ($currentUserRole === 'sahabat') {
+                if (strtolower($editArticle['author_email']) !== strtolower($currentUser['email']) && $editArticle['author'] !== $currentUser['name']) {
+                    $canEdit = false;
+                }
+            } elseif ($currentUserRole === 'reviewer') {
+                $artAuthorEmail = strtolower($editArticle['author_email'] ?? '');
+                $isOwn = ($artAuthorEmail === strtolower($currentUser['email']) || $editArticle['author'] === $currentUser['name']);
+                if (!$isOwn) {
+                    $stmtRoleChk = $db->prepare("SELECT role FROM users WHERE LOWER(email) = ?");
+                    $stmtRoleChk->execute([$artAuthorEmail]);
+                    $authorRole = $stmtRoleChk->fetchColumn();
+                    if ($authorRole && $authorRole !== 'sahabat') {
+                        $canEdit = false;
+                    }
+                }
+            }
+
+            if ($canEdit) {
+                $tab = 'write';
+                $editBullets = json_decode($editArticle['bullets'] ?: '[]', true);
+                $editArticle['bullets_text'] = is_array($editBullets) ? implode("\n", $editBullets) : '';
+            } else {
+                $editArticle = null;
+                $err = "Anda tidak memiliki hak untuk mengedit artikel ini.";
+                $tab = 'articles';
+            }
         }
     }
 }
@@ -1198,18 +1394,18 @@ $categoriesList = array_keys($navbarCategories);
       <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0">
         
         <!-- Sidebar Header: GNN Logo + Close / Collapse Button -->
-        <div class="h-[72px] px-4 border-b border-zinc-100 flex items-center justify-between shrink-0">
-          <a href="/" class="flex items-center overflow-hidden group">
-            <img src="/icon/logoh.png" alt="Good News Nusantara" class="h-9 w-auto object-contain sidebar-text" onerror="this.onerror=null; this.src='/logoh.png';">
+        <div class="h-[64px] sm:h-[72px] px-3 sm:px-4 pt-0 pb-0 border-b border-zinc-100 flex items-center justify-between shrink-0">
+          <a href="/" class="h-full flex items-center overflow-hidden group pt-0 pb-0 my-0">
+            <img src="/icon/logoh.png" alt="Good News Nusantara" class="h-full w-auto max-h-[64px] sm:max-h-[72px] object-contain object-left sidebar-text block pt-0 pb-0 mt-0" style="height: 100%; max-height: 72px; margin-top: 0; padding-top: 0;" onerror="this.onerror=null; this.src='/logoh.png';">
             <div class="w-9 h-9 rounded-xl bg-[#CC0000] flex items-center justify-center shrink-0 shadow-xs hidden" id="sidebarMiniLogo">
               <span class="text-white font-black text-sm tracking-tighter">GNN</span>
             </div>
           </a>
           <!-- Close button on mobile / Collapse button on desktop -->
-          <button onclick="closeMobileSidebar()" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition">
+          <button onclick="closeMobileSidebar()" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition shrink-0 self-center">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
-          <button onclick="toggleSidebar()" title="Kecilkan / Perbesar Menu" class="hidden lg:flex sidebar-text w-7 h-7 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition shrink-0">
+          <button onclick="toggleSidebar()" title="Kecilkan / Perbesar Menu" class="hidden lg:flex sidebar-text w-7 h-7 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition shrink-0 self-center">
             <svg id="sidebarToggleIcon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
           </button>
         </div>
@@ -1236,7 +1432,8 @@ $categoriesList = array_keys($navbarCategories);
               <?php endif; ?>
             </a>
 
-            <!-- 2. Galeri Foto -->
+            <?php if ($currentUserRole === 'admin'): ?>
+            <!-- 2. Galeri Foto (Admin only) -->
             <?php $isActive = ($tab === 'gallery'); ?>
             <a href="?tab=gallery" class="group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition <?= $isActive ? 'bg-red-50 text-[#CC0000] border border-red-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' ?>">
               <div class="flex items-center gap-3">
@@ -1250,7 +1447,7 @@ $categoriesList = array_keys($navbarCategories);
               <?php endif; ?>
             </a>
 
-            <!-- 3. Video YouTube -->
+            <!-- 3. Video YouTube (Admin only) -->
             <?php $isActive = ($tab === 'videos'); ?>
             <a href="?tab=videos" class="group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition <?= $isActive ? 'bg-red-50 text-[#CC0000] border border-red-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' ?>">
               <div class="flex items-center gap-3">
@@ -1264,7 +1461,7 @@ $categoriesList = array_keys($navbarCategories);
               <?php endif; ?>
             </a>
 
-            <!-- 4. Pengguna -->
+            <!-- 4. Pengguna (Admin only) -->
             <?php $isActive = ($tab === 'users'); ?>
             <a href="?tab=users" class="group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition <?= $isActive ? 'bg-red-50 text-[#CC0000] border border-red-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' ?>">
               <div class="flex items-center gap-3">
@@ -1278,7 +1475,7 @@ $categoriesList = array_keys($navbarCategories);
               <?php endif; ?>
             </a>
 
-            <!-- 5. Pengaturan -->
+            <!-- 5. Pengaturan (Admin only) -->
             <?php $isActive = ($tab === 'settings'); ?>
             <a href="?tab=settings" class="group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition <?= $isActive ? 'bg-red-50 text-[#CC0000] border border-red-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' ?>">
               <div class="flex items-center gap-3">
@@ -1291,6 +1488,7 @@ $categoriesList = array_keys($navbarCategories);
                 <svg class="sidebar-text w-3.5 h-3.5 text-[#CC0000] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
               <?php endif; ?>
             </a>
+            <?php endif; ?>
           </nav>
         </div>
 
@@ -1789,15 +1987,23 @@ $categoriesList = array_keys($navbarCategories);
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <div>
                     <label class="block text-xs font-bold text-zinc-800 uppercase tracking-wider mb-1.5">Nama Penulis</label>
-                    <input type="text" name="author" value="<?= htmlspecialchars($editArticle['author'] ?? $currentUser['name']) ?>" class="w-full px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none bg-zinc-50">
+                    <input type="text" name="author" value="<?= htmlspecialchars($editArticle['author'] ?? $currentUser['name']) ?>" <?= ($currentUserRole === 'sahabat') ? 'readonly' : '' ?> class="w-full px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none <?= ($currentUserRole === 'sahabat') ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-50' ?>">
                   </div>
 
                   <div>
                     <label class="block text-xs font-bold text-zinc-800 uppercase tracking-wider mb-1.5">Status Penerbitan</label>
-                    <select name="status" class="w-full px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none bg-white cursor-pointer">
-                      <option value="publish" <?= ($editArticle['status'] ?? 'publish') === 'publish' ? 'selected' : '' ?>>Terbitkan (Publish)</option>
-                      <option value="draft" <?= ($editArticle['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Simpan Sebagai Draf (Draft)</option>
-                    </select>
+                    <?php if ($currentUserRole === 'sahabat'): ?>
+                      <input type="hidden" name="status" value="draft">
+                      <div class="px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs font-bold text-amber-800 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Draft (Akan ditinjau oleh Reviewer / Redaksi)</span>
+                      </div>
+                    <?php else: ?>
+                      <select name="status" class="w-full px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none bg-white cursor-pointer">
+                        <option value="publish" <?= ($editArticle['status'] ?? 'publish') === 'publish' ? 'selected' : '' ?>>Terbitkan (Publish)</option>
+                        <option value="draft" <?= ($editArticle['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Simpan Sebagai Draf (Draft)</option>
+                      </select>
+                    <?php endif; ?>
                   </div>
                 </div>
 
@@ -1806,7 +2012,7 @@ $categoriesList = array_keys($navbarCategories);
                   <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="text-zinc-600">
-                      Anda masuk sebagai <strong><?= htmlspecialchars($currentUser['name']) ?></strong> (<?= strtoupper($currentUser['role'] ?? 'ADMIN') ?>)
+                      Anda masuk sebagai <strong><?= htmlspecialchars($currentUser['name']) ?></strong> (<?= strtoupper($currentUserRole) ?>)
                     </span>
                   </div>
                   <span class="text-[10px] text-zinc-400 font-mono">ID: <?= htmlspecialchars($currentUser['id']) ?></span>
@@ -1818,12 +2024,18 @@ $categoriesList = array_keys($navbarCategories);
                     &larr; Batal &amp; Kembali
                   </a>
                   <div class="flex items-center gap-3">
-                    <button type="button" onclick="document.querySelector('select[name=status]').value='draft'; document.getElementById('articleWriteForm').submit();" class="px-5 py-2.5 border border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-bold text-xs rounded-full shadow-2xs transition">
-                      Simpan Draf
-                    </button>
-                    <button type="submit" class="px-7 py-3 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-sm transition uppercase tracking-wider">
-                      Terbitkan Sekarang
-                    </button>
+                    <?php if ($currentUserRole === 'sahabat'): ?>
+                      <button type="submit" class="px-7 py-3 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-sm transition uppercase tracking-wider">
+                        Simpan sebagai Draft
+                      </button>
+                    <?php else: ?>
+                      <button type="button" onclick="const sel=document.querySelector('select[name=status]'); if(sel) sel.value='draft'; document.getElementById('articleWriteForm').submit();" class="px-5 py-2.5 border border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-bold text-xs rounded-full shadow-2xs transition">
+                        Simpan Draf
+                      </button>
+                      <button type="submit" class="px-7 py-3 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-sm transition uppercase tracking-wider">
+                        <?= ($editArticle && ($editArticle['status'] ?? '') === 'publish') ? 'Perbarui & Terbitkan' : 'Terbitkan Sekarang' ?>
+                      </button>
+                    <?php endif; ?>
                   </div>
                 </div>
               </form>
@@ -2593,6 +2805,83 @@ $categoriesList = array_keys($navbarCategories);
         </main>
       </div>
     </div>
+
+    <?php if (!empty($isProfileIncomplete)): ?>
+    <!-- MODAL WAJIB LENGKAPI DATA PENDAFTARAN -->
+    <div id="modalCompleteProfile" class="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-auto">
+        <div class="text-center pb-4 mb-4 border-b border-zinc-100">
+          <div class="w-14 h-14 bg-red-50 text-[#CC0000] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-2xs border border-red-100">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </div>
+          <h3 class="font-extrabold text-lg text-zinc-900 tracking-tight">Lengkapi Data Pendaftaran</h3>
+          <p class="text-xs text-zinc-500 mt-1 leading-relaxed">Akun Google Anda berhasil terhubung. Mohon lengkapi data profil &amp; identitas kepenulisan Anda sebelum mulai berkarya di Good News Nusantara.</p>
+        </div>
+
+        <form method="POST" action="" class="space-y-3.5">
+          <input type="hidden" name="action" value="complete_google_profile">
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Nama Lengkap Penulis *</label>
+            <input type="text" name="name" required value="<?= htmlspecialchars($userRecord['name'] ?? $currentUser['name']) ?>" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none font-bold">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Username</label>
+              <input type="text" value="<?= htmlspecialchars($userRecord['username'] ?? $currentUser['username']) ?>" readonly class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl bg-zinc-100 text-zinc-500 outline-none font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Email</label>
+              <input type="email" value="<?= htmlspecialchars($userRecord['email'] ?? $currentUser['email']) ?>" readonly class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl bg-zinc-100 text-zinc-500 outline-none truncate">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Nomor WhatsApp Aktif *</label>
+            <input type="tel" name="whatsapp" required value="<?= htmlspecialchars($userRecord['whatsapp'] ?? '') ?>" placeholder="08xxxxxxxxxx" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none">
+            <p class="text-[10px] text-zinc-400 mt-0.5">Digunakan tim redaksi untuk konfirmasi penerbitan dan informasi karya.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Jenis Kelamin *</label>
+              <select name="gender" class="w-full px-3 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none bg-white cursor-pointer font-bold">
+                <option value="Laki-laki" <?= ($userRecord['gender'] ?? '') === 'Laki-laki' ? 'selected' : '' ?>>Laki-laki</option>
+                <option value="Perempuan" <?= ($userRecord['gender'] ?? '') === 'Perempuan' ? 'selected' : '' ?>>Perempuan</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Tanggal Lahir *</label>
+              <input type="date" name="birth_date" required value="<?= htmlspecialchars($userRecord['birth_date'] ?? '') ?>" class="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Provinsi *</label>
+              <input type="text" name="province" required value="<?= htmlspecialchars($userRecord['province'] ?? '') ?>" placeholder="Contoh: Jawa Timur" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Kota / Kabupaten *</label>
+              <input type="text" name="city" required value="<?= htmlspecialchars($userRecord['city'] ?? '') ?>" placeholder="Contoh: Surabaya" class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 uppercase mb-1">Alamat Lengkap Domisili *</label>
+            <textarea name="address" required rows="2" placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan..." class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none"><?= htmlspecialchars($userRecord['address'] ?? '') ?></textarea>
+          </div>
+
+          <div class="pt-3">
+            <button type="submit" class="w-full py-3 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full shadow-md transition uppercase tracking-wider cursor-pointer">
+              Simpan &amp; Lanjutkan ke Studio
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <?php endif; ?>
 
     <script>
       function openMobileSidebar() {
