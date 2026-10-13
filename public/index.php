@@ -239,7 +239,14 @@ if ($categoryParam) {
     $filteredArticles = array_filter($allArticles, function($a) use ($categoryParam) {
         $c = $a['category'] ?? '';
         $sc = $a['sub_category'] ?? '';
-        return strcasecmp($c, $categoryParam) === 0 || strcasecmp($sc, $categoryParam) === 0;
+        $match = (strcasecmp($c, $categoryParam) === 0 || strcasecmp($sc, $categoryParam) === 0);
+        if (!$match && strcasecmp($categoryParam, 'SOSIAL') === 0) {
+            $match = (strcasecmp($c, 'SEJARAH') === 0 || stripos($sc, 'sejarah') !== false);
+        }
+        if (!$match && strcasecmp($categoryParam, 'SEJARAH') === 0) {
+            $match = (strcasecmp($c, 'SEJARAH') === 0 || stripos($sc, 'sejarah') !== false);
+        }
+        return $match;
     });
 } elseif ($queryParam) {
     $filteredArticles = array_filter($allArticles, function($a) use ($queryParam) {
@@ -675,11 +682,10 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
         <?php
         $navItems = [
             ['name' => 'Ekonomi', 'subs' => ['Ekonomi', 'Bisnis', 'Investasi', 'Ketenagakerjaan']],
-            ['name' => 'Saintek', 'subs' => ['Pendidikan', 'Teknologi', 'Sains', 'Lingkungan', 'Konservasi', 'Energi Hijau']],
+            ['name' => 'Saintek', 'subs' => ['Pendidikan', 'Teknologi', 'Sains', 'Antariksa', 'Lingkungan']],
             ['name' => 'Politik', 'subs' => ['Kebijakan', 'Nasional', 'Asean', 'Internasional']],
             ['name' => 'Hukum', 'subs' => ['Hukum', 'Kriminal', 'Investigasi']],
-            ['name' => 'Sosial', 'subs' => ['Sosial', 'Budaya', 'Gastronomi', 'Seni & Sastra']],
-            ['name' => 'Sejarah', 'subs' => ['Sejarah Nusantara', 'Kerajaan', 'Purbakala', 'Peradaban', 'Cagar Budaya']],
+            ['name' => 'Sosial', 'subs' => ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra']],
             ['name' => 'Lifestyle', 'subs' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan']]
         ];
 

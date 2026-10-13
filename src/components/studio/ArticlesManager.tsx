@@ -148,11 +148,10 @@ const WORLD_CAPITALS = [
 
 export const STUDIO_CATEGORY_MAP: Record<string, string[]> = {
   'EKONOMI': ['Ekonomi', 'Bisnis', 'Investasi', 'Ketenagakerjaan'],
-  'SAINTEK': ['Pendidikan', 'Teknologi'],
-  'LINGKUNGAN': ['Lingkungan'],
+  'SAINTEK': ['Pendidikan', 'Teknologi', 'Sains', 'Antariksa', 'Lingkungan'],
   'POLITIK': ['Kebijakan', 'Nasional', 'Asean', 'Internasional'],
   'HUKUM': ['Hukum', 'Kriminal', 'Investigasi'],
-  'SOSIAL': ['Sosial', 'Budaya', 'Gastronomi', 'Seni & Sastra', 'Sejarah'],
+  'SOSIAL': ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
   'LIFESTYLE': ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Musik & Film'],
 };
 
@@ -484,7 +483,6 @@ export const ArticlesManager: React.FC<ArticlesManagerProps> = ({
                     >
                       <option value="EKONOMI">Ekonomi</option>
                       <option value="SAINTEK">Saintek</option>
-                      <option value="LINGKUNGAN">Lingkungan</option>
                       <option value="POLITIK">Politik</option>
                       <option value="HUKUM">Hukum</option>
                       <option value="SOSIAL">Sosial</option>

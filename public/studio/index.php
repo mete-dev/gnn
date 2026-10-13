@@ -938,6 +938,12 @@ if ($currentUser) {
                 $tab = 'write';
                 $editBullets = json_decode($editArticle['bullets'] ?: '[]', true);
                 $editArticle['bullets_text'] = is_array($editBullets) ? implode("\n", $editBullets) : '';
+                if (strcasecmp($editArticle['category'] ?? '', 'SEJARAH') === 0) {
+                    $editArticle['category'] = 'Sosial';
+                    if (empty($editArticle['sub_category'])) {
+                        $editArticle['sub_category'] = 'Sejarah';
+                    }
+                }
             } else {
                 $editArticle = null;
                 $err = "Anda tidak memiliki hak untuk mengedit artikel ini.";
@@ -950,11 +956,10 @@ if ($currentUser) {
 // Kategori Resmi dari Navibar Header
 $navbarCategories = [
     'Ekonomi' => ['Ekonomi', 'Bisnis', 'Investasi', 'Ketenagakerjaan'],
-    'Saintek' => ['Pendidikan', 'Teknologi', 'Sains', 'Lingkungan', 'Konservasi', 'Energi Hijau'],
+    'Saintek' => ['Pendidikan', 'Teknologi', 'Sains', 'Antariksa', 'Lingkungan'],
     'Politik' => ['Kebijakan', 'Nasional', 'Asean', 'Internasional'],
     'Hukum' => ['Hukum', 'Kriminal', 'Investigasi'],
-    'Sosial' => ['Sosial', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
-    'Sejarah' => ['Sejarah Nusantara', 'Kerajaan', 'Purbakala', 'Peradaban', 'Cagar Budaya'],
+    'Sosial' => ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
     'Lifestyle' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan']
 ];
 

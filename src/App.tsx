@@ -43,6 +43,7 @@ import { toPng } from 'html-to-image';
 import { GnfiLogo } from './components/GnfiLogo';
 import { StudioDashboard } from './components/studio/StudioDashboard';
 import { SahabatRegisterModal } from './components/studio/SahabatRegisterModal';
+import { StaticPages, StaticPageType } from './components/StaticPages';
 import { User, Role, VideoItem } from './types/studio';
 
 // Article model
@@ -98,7 +99,7 @@ export default function App() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState<'home' | 'category' | 'detail' | 'story' | 'cms' | 'tv' | 'loginStudio' | 'author'>(() => {
+  const [activeTab, setActiveTab] = useState<'home' | 'category' | 'detail' | 'story' | 'cms' | 'tv' | 'loginStudio' | 'author' | 'static'>(() => {
     try {
       const hash = typeof window !== 'undefined' ? window.location.hash : '';
       if (hash.startsWith('#/studio')) {
@@ -108,6 +109,8 @@ export default function App() {
     } catch (e) {}
     return 'home';
   });
+
+  const [staticPageType, setStaticPageType] = useState<StaticPageType>('about');
 
   const [selectedAuthor, setSelectedAuthor] = useState<{ name: string; username: string; email: string } | null>(null);
 
@@ -126,7 +129,11 @@ export default function App() {
 
   // Persist dark mode and apply class on document
   useEffect(() => {
-    document.title = "Good News Nusantara (GNN) - Makin Tahu Indonesia";
+    if (detailArticle) {
+      document.title = `${detailArticle.title} - Good News Nusantara | Jadi Tahu Indonesia`;
+    } else {
+      document.title = "Good News Nusantara | Jadi Tahu Indonesia";
+    }
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('gnfi_theme', 'dark');
@@ -134,7 +141,7 @@ export default function App() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('gnfi_theme', 'light');
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, detailArticle]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [detailArticle, setDetailArticle] = useState<Article | null>(null);
@@ -298,6 +305,37 @@ export default function App() {
 
       const cleanHash = rawHash.replace(/^#\//, '');
       const parts = cleanHash.split('/');
+
+      if (parts[0] === 'tentang-kami' || parts[0] === 'about') {
+        setStaticPageType('about');
+        setActiveTab('static');
+        return;
+      }
+      if (parts[0] === 'hubungi-kami' || parts[0] === 'contact' || parts[0] === 'kontak') {
+        setStaticPageType('contact');
+        setActiveTab('static');
+        return;
+      }
+      if (parts[0] === 'aturan-layanan' || parts[0] === 'terms') {
+        setStaticPageType('terms');
+        setActiveTab('static');
+        return;
+      }
+      if (parts[0] === 'kebijakan-privasi' || parts[0] === 'privacy') {
+        setStaticPageType('privacy');
+        setActiveTab('static');
+        return;
+      }
+      if (parts[0] === 'pedoman-media-siber' || parts[0] === 'pedoman-siber') {
+        setStaticPageType('guidelines-media');
+        setActiveTab('static');
+        return;
+      }
+      if (parts[0] === 'panduan-pengguna' || parts[0] === 'guidelines-user') {
+        setStaticPageType('guidelines-user');
+        setActiveTab('static');
+        return;
+      }
 
       if (parts[0] === 'kategori' && parts[1]) {
         setSelectedCategory(decodeURIComponent(parts[1]));
@@ -684,10 +722,7 @@ export default function App() {
     },
     {
       name: 'Saintek',
-      subcategories: ['Pendidikan', 'Teknologi'],
-    },
-    {
-      name: 'Lingkungan',
+      subcategories: ['Pendidikan', 'Teknologi', 'Sains', 'Antariksa', 'Lingkungan'],
     },
     {
       name: 'Politik',
@@ -699,7 +734,7 @@ export default function App() {
     },
     {
       name: 'Sosial',
-      subcategories: ['Sosial', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
+      subcategories: ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
     },
     {
       name: 'Lifestyle',
@@ -759,11 +794,10 @@ export default function App() {
     // Map parent categories to their relevant keywords/subcategories
     const categoryMap: Record<string, string[]> = {
       'ekonomi': ['ekonomi', 'bisnis', 'investasi', 'ketenagakerjaan'],
-      'saintek': ['saintek', 'pendidikan', 'teknologi', 'iptek', 'sains'],
-      'lingkungan': ['lingkungan', 'alam', 'iklim', 'konservasi', 'hutan', 'cuaca'],
+      'saintek': ['saintek', 'pendidikan', 'teknologi', 'iptek', 'sains', 'antariksa', 'lingkungan'],
       'politik': ['politik', 'kebijakan', 'nasional', 'asean', 'internasional', 'pemerintah', 'dpr'],
       'hukum': ['hukum', 'kriminal', 'investigasi', 'sidang', 'kejaksaan', 'polisi'],
-      'sosial': ['sosial', 'budaya', 'gastronomi', 'seni & sastra', 'seni', 'sastra', 'kuliner', 'tradisi', 'sejarah'],
+      'sosial': ['sosial', 'sejarah', 'budaya', 'gastronomi', 'seni & sastra', 'seni', 'sastra', 'kuliner', 'tradisi', 'nusantara'],
       'lifestyle': ['lifestyle', 'gaya hidup', 'religi', 'olahraga', 'hiburan', 'kesehatan', 'musik', 'film', 'wisata']
     };
 
@@ -823,11 +857,11 @@ export default function App() {
     const idLower = loginEmail.toLowerCase().trim();
 
     // Direct client-side authentication for default accounts (Instant & 100% reliable)
-    if ((idLower === 'admin' || idLower === 'admin@gnn.id') && loginPassword === 'admin') {
+    if ((idLower === 'admingnn' || idLower === 'admingnn@gnn.id') && loginPassword === 'a@3etbwsye3') {
       const adminUser: User = {
         id: 'usr-1',
-        username: 'admin',
-        email: 'admin@gnn.id',
+        username: 'admingnn',
+        email: 'admingnn@gnn.id',
         name: 'Admin Utama GNN',
         role: 'admin',
         createdAt: '2026-01-10',
@@ -841,42 +875,6 @@ export default function App() {
       setLoginError('');
       setLoginLoading(false);
       return;
-    } else if ((idLower === 'reviewer' || idLower === 'reviewer@gnn.id') && loginPassword === 'reviewer') {
-      const reviewerUser: User = {
-        id: 'usr-2',
-        username: 'reviewer',
-        email: 'reviewer@gnn.id',
-        name: 'Redaktur Pelaksana (Reviewer)',
-        role: 'reviewer',
-        createdAt: '2026-02-15',
-        status: 'active',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-      };
-      setStudioUser(reviewerUser);
-      localStorage.setItem('studio_user', JSON.stringify(reviewerUser));
-      setActiveTab('cms');
-      setLoginPassword('');
-      setLoginError('');
-      setLoginLoading(false);
-      return;
-    } else if ((idLower === 'sahabat' || idLower === 'sahabat@gnn.id') && loginPassword === 'sahabat') {
-      const sahabatUser: User = {
-        id: 'usr-3',
-        username: 'sahabat',
-        email: 'sahabat@gnn.id',
-        name: 'Sahabat Penulis GNN',
-        role: 'sahabat',
-        createdAt: '2026-03-01',
-        status: 'active',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-      };
-      setStudioUser(sahabatUser);
-      localStorage.setItem('studio_user', JSON.stringify(sahabatUser));
-      setActiveTab('cms');
-      setLoginPassword('');
-      setLoginError('');
-      setLoginLoading(false);
-      return;
     }
 
     try {
@@ -884,7 +882,9 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifier: loginEmail,
+          identifier: loginEmail.trim(),
+          email: loginEmail.trim(),
+          username: loginEmail.trim(),
           password: loginPassword,
         }),
       });
@@ -2801,6 +2801,31 @@ export default function App() {
           </div>
         )}
 
+        {/* STATIC OFFICIAL PAGES (About Us, Contact, Terms, Privacy, Guidelines) */}
+        {!loading && activeTab === 'static' && (
+          <StaticPages
+            pageType={staticPageType}
+            onBackToHome={() => {
+              setActiveTab('home');
+              window.location.hash = '#/';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToPage={(type) => {
+              setStaticPageType(type);
+              const slugMap: Record<StaticPageType, string> = {
+                about: 'tentang-kami',
+                contact: 'hubungi-kami',
+                terms: 'aturan-layanan',
+                privacy: 'kebijakan-privasi',
+                'guidelines-media': 'pedoman-media-siber',
+                'guidelines-user': 'panduan-pengguna'
+              };
+              window.location.hash = `#/${slugMap[type]}`;
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
+
       </main>
 
       {/* ============================================================== */}
@@ -2831,11 +2856,11 @@ export default function App() {
               <div className="space-y-2.5">
                 <h4 className="text-white font-bold text-xs uppercase tracking-wider">Kategori</h4>
                 <ul className="space-y-1.5 text-xs text-zinc-400">
-                  <li><button onClick={() => { setSelectedCategory('Ekonomi'); setActiveTab('home'); }} className="hover:text-white transition-colors">Ekonomi & Bisnis</button></li>
-                  <li><button onClick={() => { setSelectedCategory('Saintek'); setActiveTab('home'); }} className="hover:text-white transition-colors">Saintek & Teknologi</button></li>
-                  <li><button onClick={() => { setSelectedCategory('Politik'); setActiveTab('home'); }} className="hover:text-white transition-colors">Politik & Kebijakan</button></li>
-                  <li><button onClick={() => { setSelectedCategory('Sosial'); setActiveTab('home'); }} className="hover:text-white transition-colors">Sosial & Budaya</button></li>
-                  <li><button onClick={() => { setSelectedCategory('Lifestyle'); setActiveTab('home'); }} className="hover:text-white transition-colors">Lifestyle & Olahraga</button></li>
+                  <li><button onClick={() => { setSelectedCategory('Ekonomi'); setActiveTab('home'); }} className="hover:text-white transition-colors cursor-pointer">Ekonomi & Bisnis</button></li>
+                  <li><button onClick={() => { setSelectedCategory('Saintek'); setActiveTab('home'); }} className="hover:text-white transition-colors cursor-pointer">Saintek & Teknologi</button></li>
+                  <li><button onClick={() => { setSelectedCategory('Politik'); setActiveTab('home'); }} className="hover:text-white transition-colors cursor-pointer">Politik & Kebijakan</button></li>
+                  <li><button onClick={() => { setSelectedCategory('Sosial'); setActiveTab('home'); }} className="hover:text-white transition-colors cursor-pointer">Sosial & Budaya</button></li>
+                  <li><button onClick={() => { setSelectedCategory('Lifestyle'); setActiveTab('home'); }} className="hover:text-white transition-colors cursor-pointer">Lifestyle & Olahraga</button></li>
                 </ul>
               </div>
 
@@ -2843,10 +2868,10 @@ export default function App() {
               <div className="space-y-2.5">
                 <h4 className="text-white font-bold text-xs uppercase tracking-wider">Layanan</h4>
                 <ul className="space-y-1.5 text-xs text-zinc-400">
-                  <li><button onClick={() => setActiveTab('story')} className="hover:text-white transition-colors">Story 9:16 Creator</button></li>
-                  <li><button onClick={() => { if (studioUser) setActiveTab('cms'); else setActiveTab('loginStudio'); }} className="hover:text-white transition-colors">Studio Redaksi</button></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Pedoman Media Siber</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Tentang Kami</a></li>
+                  <li><button onClick={() => setActiveTab('story')} className="hover:text-white transition-colors cursor-pointer">Story 9:16 Creator</button></li>
+                  <li><button onClick={() => { if (studioUser) setActiveTab('cms'); else setActiveTab('loginStudio'); }} className="hover:text-white transition-colors cursor-pointer">Studio Redaksi</button></li>
+                  <li><button onClick={() => { setStaticPageType('guidelines-media'); setActiveTab('static'); window.location.hash = '#/pedoman-media-siber'; }} className="hover:text-white transition-colors cursor-pointer">Pedoman Media Siber</button></li>
+                  <li><button onClick={() => { setStaticPageType('about'); setActiveTab('static'); window.location.hash = '#/tentang-kami'; }} className="hover:text-white transition-colors cursor-pointer">Tentang Kami</button></li>
                 </ul>
               </div>
 
@@ -2854,10 +2879,10 @@ export default function App() {
               <div className="space-y-2.5">
                 <h4 className="text-white font-bold text-xs uppercase tracking-wider">Informasi</h4>
                 <ul className="space-y-1.5 text-xs text-zinc-400">
-                  <li><a href="#" className="hover:text-white transition-colors">Kebijakan Privasi</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Ketentuan Layanan</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Kontak Iklan</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Sitemap</a></li>
+                  <li><button onClick={() => { setStaticPageType('privacy'); setActiveTab('static'); window.location.hash = '#/kebijakan-privasi'; }} className="hover:text-white transition-colors cursor-pointer">Kebijakan Privasi</button></li>
+                  <li><button onClick={() => { setStaticPageType('terms'); setActiveTab('static'); window.location.hash = '#/aturan-layanan'; }} className="hover:text-white transition-colors cursor-pointer">Ketentuan Layanan</button></li>
+                  <li><button onClick={() => { setStaticPageType('contact'); setActiveTab('static'); window.location.hash = '#/hubungi-kami'; }} className="hover:text-white transition-colors cursor-pointer">Hubungi Kami & Iklan</button></li>
+                  <li><button onClick={() => { setStaticPageType('guidelines-user'); setActiveTab('static'); window.location.hash = '#/panduan-pengguna'; }} className="hover:text-white transition-colors cursor-pointer">Panduan Pengguna</button></li>
                 </ul>
               </div>
 
@@ -2868,7 +2893,7 @@ export default function App() {
           {/* Bottom Bar */}
           <div className="pt-6 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-zinc-500 text-[11px]">
             <p>© {new Date().getFullYear()} GOOD NEWS NUSANTARA (GNN). Hak Cipta Dilindungi Undang-Undang.</p>
-            <p className="font-semibold text-zinc-400">Makin Tahu Indonesia</p>
+            <p className="font-semibold text-zinc-400">Jadi Tahu Indonesia</p>
           </div>
 
         </div>
