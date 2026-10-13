@@ -236,6 +236,71 @@ function ensureTableSchemas($pdo) {
                 // Repair any missing or empty article images
                 $pdo->exec("UPDATE articles SET image = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80' WHERE id = 'gnn-101' AND (image IS NULL OR image = '' OR LENGTH(TRIM(image)) < 5)");
                 $pdo->exec("UPDATE articles SET image = 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80' WHERE image IS NULL OR image = '' OR LENGTH(TRIM(image)) < 5");
+
+                // Seed Saintek & Sejarah authentic articles if not already present
+                $seedArticles = [
+                    [
+                        'id' => 'gnn-st-2026-satelit',
+                        'category' => 'SAINTEK',
+                        'sub_category' => 'Teknologi',
+                        'title' => 'Inovasi Satelit Nusantara: Perluas Jangkauan Internet Cepat Hingga Pelosok 3T Indonesia',
+                        'content' => 'Kemajuan teknologi telekomunikasi di Indonesia terus mencatatkan tonggak sejarah baru dengan peluncuran dan operasionalisasi satelit generasi terbaru yang dirancang untuk memperluas akses internet pita lebar (broadband) ke daerah tertinggal, terdepan, dan terluar (3T). Program pemerataan konektivitas digital ini mendukung digitalisasi pendidikan, layanan kesehatan jarak jauh (telemedicine), serta percepatan ekonomi digital bagi masyarakat di kepulauan terpencil demi mewujudkan Indonesia Emas yang inklusif.',
+                        'image' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+                        'caption' => 'Satelit komunikasi Nusantara beroperasi di orbit untuk pemerataan jaringan internet daerah 3T',
+                        'author' => 'Tim Riset & Teknologi GNN',
+                        'popular_rank' => 95,
+                        'views' => 1840,
+                        'date' => '13 Oct 2026'
+                    ],
+                    [
+                        'id' => 'gnn-st-2026-padi',
+                        'category' => 'SAINTEK',
+                        'sub_category' => 'Sains',
+                        'title' => 'Terobosan Riset BRIN: Kembangkan Varietas Benih Padi Tahan Salinitas dan Iklim Ekstrem',
+                        'content' => 'Para peneliti Badan Riset dan Inovasi Nasional (BRIN) sukses mengembangkan galur padi mutan unggul yang memiliki ketahanan tinggi terhadap kadar garam (salinitas) dan kekeringan akibat perubahan iklim global. Temuan ilmiah ini menjadi terobosan strategis bagi upaya mewujudkan kedaulatan pangan berkelanjutan di berbagai lahan marjinal dan kawasan pesisir Indonesia.',
+                        'image' => 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=80',
+                        'caption' => 'Riset varietas benih padi unggul di laboratorium bioteknologi tanaman BRIN',
+                        'author' => 'Desk Sains & Riset GNN',
+                        'popular_rank' => 90,
+                        'views' => 1420,
+                        'date' => '12 Oct 2026'
+                    ],
+                    [
+                        'id' => 'gnn-sej-2026-sriwijaya',
+                        'category' => 'SOSIAL',
+                        'sub_category' => 'Sejarah',
+                        'title' => 'Misteri Kejayaan Kemaritiman Sriwijaya: Mengungkap Poros Niaga Rempah di Selat Malaka',
+                        'content' => 'Kedatuan Sriwijaya yang berpusat di Pulau Sumatra tercatat dalam berbagai prasasti dan catatan musafir mancanegara sebagai penguasa jalur niaga maritim internasional yang disegani sejak abad ke-7 masehi. Melalui armada laut yang tangguh dan diplomasi terampil, Sriwijaya mengendalikan simpul dagang rempah Selat Malaka sekaligus menjadi pusat studi kebudayaan dan ilmu pengetahuan dunia kuno.',
+                        'image' => 'https://images.unsplash.com/photo-1599561066246-8d8a17485368?auto=format&fit=crop&w=1200&q=80',
+                        'caption' => 'Ilustrasi relief kapal layar bercadik nusantara zaman keemasan maritim Sriwijaya',
+                        'author' => 'Desk Sejarah & Budaya GNN',
+                        'popular_rank' => 88,
+                        'views' => 1950,
+                        'date' => '12 Oct 2026'
+                    ],
+                    [
+                        'id' => 'gnn-sej-2026-tarumanagara',
+                        'category' => 'SOSIAL',
+                        'sub_category' => 'Sejarah',
+                        'title' => 'Jejak Peradaban Tarumanagara: Menguak Pesan Abadi Raja Purnawarman dalam Prasasti Ciaruteun',
+                        'content' => 'Prasasti Ciaruteun yang ditemukan di tepian Sungai Cisadane menyimpan guratan tapak kaki Raja Purnawarman yang melambangkan kekuasaan yang adil dan pelindung rakyat Tarumanagara. Pembangunan saluran irigasi Sungai Candrabhaga dan Gomati yang tercatat dalam prasasti Tugu membuktikan tingginya rekayasa teknologi tata kelola air dan pertanian nenek moyang bangsa Indonesia sejak abad ke-5 masehi.',
+                        'image' => 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80',
+                        'caption' => 'Situs cagar budaya dan batu prasasti peninggalan peradaban kerajaan kuno di Nusantara',
+                        'author' => 'Desk Sejarah & Budaya GNN',
+                        'popular_rank' => 85,
+                        'views' => 1610,
+                        'date' => '11 Oct 2026'
+                    ]
+                ];
+
+                $stmtInsertArt = $pdo->prepare("INSERT IGNORE INTO articles (id, category, sub_category, title, content, image, caption, author, popular_rank, views, date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'publish', CURRENT_TIMESTAMP)");
+                foreach ($seedArticles as $sa) {
+                    $stmtInsertArt->execute([
+                        $sa['id'], $sa['category'], $sa['sub_category'], $sa['title'],
+                        $sa['content'], $sa['image'], $sa['caption'], $sa['author'],
+                        $sa['popular_rank'], $sa['views'], $sa['date']
+                    ]);
+                }
             } catch (Exception $e) {}
         }
     } catch (Exception $e) {

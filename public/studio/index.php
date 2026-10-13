@@ -960,7 +960,7 @@ $navbarCategories = [
     'Politik' => ['Kebijakan', 'Nasional', 'Asean', 'Internasional'],
     'Hukum' => ['Hukum', 'Kriminal', 'Investigasi'],
     'Sosial' => ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
-    'Lifestyle' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan']
+    'Lifestyle' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Media Kreatif', 'Film & Series']
 ];
 
 $categoriesList = array_keys($navbarCategories);

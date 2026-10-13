@@ -738,7 +738,7 @@ export default function App() {
     },
     {
       name: 'Lifestyle',
-      subcategories: ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan'],
+      subcategories: ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Media Kreatif', 'Film & Series'],
     },
   ];
 
@@ -798,7 +798,7 @@ export default function App() {
       'politik': ['politik', 'kebijakan', 'nasional', 'asean', 'internasional', 'pemerintah', 'dpr'],
       'hukum': ['hukum', 'kriminal', 'investigasi', 'sidang', 'kejaksaan', 'polisi'],
       'sosial': ['sosial', 'sejarah', 'budaya', 'gastronomi', 'seni & sastra', 'seni', 'sastra', 'kuliner', 'tradisi', 'nusantara'],
-      'lifestyle': ['lifestyle', 'gaya hidup', 'religi', 'olahraga', 'hiburan', 'kesehatan', 'musik', 'film', 'wisata']
+      'lifestyle': ['lifestyle', 'gaya hidup', 'religi', 'olahraga', 'hiburan', 'kesehatan', 'media kreatif', 'film & series', 'musik', 'film', 'wisata']
     };
 
     const searchTerms = categoryMap[sel] || [sel];
