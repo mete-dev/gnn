@@ -297,13 +297,16 @@ $otherArticles = array_values(array_filter($allArticles, function($a) use ($feat
     return $a['id'] !== ($featuredArticle['id'] ?? '');
 }));
 
-// Foto 1: Top 4 News List (Right Column)
-$topNewsList = array_slice($otherArticles, 0, 4);
+// Foto 1: Top News List (Right Column - 5 berita agar kolom kanan terisi penuh sejajar headline kiri)
+$topNewsList = array_slice($otherArticles, 0, 5);
+if (count($topNewsList) < 5) {
+    $topNewsList = array_merge($topNewsList, array_slice($allArticles, 0, 5 - count($topNewsList)));
+}
 
 // Foto 3: Kabar Berita Terkini List
-$kabarTerkiniList = array_slice($otherArticles, 4, 6);
-if (empty($kabarTerkiniList)) {
-    $kabarTerkiniList = array_slice($allArticles, 1, 5);
+$kabarTerkiniList = array_slice($otherArticles, 5, 6);
+if (count($kabarTerkiniList) < 4) {
+    $kabarTerkiniList = array_slice($allArticles, 1, 6);
 }
 
 // Foto 4: Olahraga (Menampilkan data dari sub kategori Olahraga)
@@ -1957,7 +1960,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
           <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between">
             <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
               <?php foreach ($topNewsList as $item): ?>
-                <div class="flex items-start gap-3.5 sm:gap-4 py-3.5 first:pt-0 last:pb-0 group">
+                <div class="flex items-start gap-3.5 sm:gap-4 py-3 sm:py-3.5 first:pt-0 last:pb-0 group">
                   <a href="/<?= slugify($item['title']) ?>" class="w-28 sm:w-32 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
                     <img src="<?= htmlspecialchars(getSafeArticleImage($item['image'] ?? '', $item['category'] ?? '')) ?>" alt="<?= htmlspecialchars($item['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                   </a>
@@ -2163,7 +2166,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
                 <!-- Followed by Headline Text Links -->
                 <div class="space-y-4">
-                  <?php foreach (array_slice($sejarahArticles, 1, 4) as $sArt): ?>
+                  <?php foreach (array_slice($sejarahArticles, 1, 6) as $sArt): ?>
                     <div class="pb-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 group">
                       <h4 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-3 mb-1">
                         <a href="/<?= slugify($sArt['title']) ?>">
