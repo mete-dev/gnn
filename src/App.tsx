@@ -1670,7 +1670,12 @@ export default function App() {
                   {(searchQuery ? filteredVideos : videos.slice(0, 4)).map((vid) => (
                     <article
                       key={vid.id}
-                      onClick={() => setSelectedVideoModal(vid)}
+                      onClick={() => {
+                        setActiveVideo(vid);
+                        setActiveTab('tv');
+                        window.location.hash = `#tv?v=${vid.id}`;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                       className="group cursor-pointer flex flex-col items-start"
                     >
                       {/* Video Thumbnail with Play Button Overlay */}

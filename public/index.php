@@ -266,6 +266,56 @@ try {
 } catch (Exception $e) {
     $videos = [];
 }
+if (empty($videos)) {
+    $videos = [
+        [
+            'id' => 'v1',
+            'youtube_id' => '50F_bFuhw7Y',
+            'title' => 'DI MOROWALI, KAWASAN INDUSTRI HIJAU TUMBUH',
+            'description' => "Dokumenter eksklusif tentang masa depan generasi muda Indonesia di kawasan industri hijau Morowali. Mengulas inovasi teknologi ramah lingkungan, peluang kerja anak bangsa, dan komitmen energi terbarukan demi mewujudkan Indonesia Emas.\n\nSimak liputan lengkapnya bersama tim liputan Good News Nusantara.",
+            'category' => 'EKONOMI',
+            'author' => 'Redaksi GNN TV',
+            'duration' => '05:20',
+            'date' => '12 Okt 2026'
+        ],
+        [
+            'id' => 'v2',
+            'youtube_id' => 'w80-jEaF5o0',
+            'title' => 'HYROX, OLAHRAGA BARU YANG KINI MENJAMAH INDONESIA',
+            'description' => "Inovasi kebugaran dan prestasi atletik nasional. Hyrox menghadirkan format kompetisi kebugaran global yang menguji daya tahan dan kekuatan fisik para atlet Indonesia.",
+            'category' => 'OLAHRAGA',
+            'author' => 'Redaksi GNN TV',
+            'duration' => '04:15',
+            'date' => '10 Okt 2026'
+        ],
+        [
+            'id' => 'v3',
+            'youtube_id' => 'd5w9Tf2u47g',
+            'title' => 'WASTRA NUSANTARA: Keindahan Budaya & Tradisi',
+            'description' => "Kekayaan budaya dan ekonomi kreatif daerah melalui tenun dan batik nusantara yang mendunia. Melestarikan warisan leluhur menjadi karya seni bernilai tinggi.",
+            'category' => 'BUDAYA',
+            'author' => 'Tim Kreatif GNN',
+            'duration' => '06:40',
+            'date' => '08 Okt 2026'
+        ]
+    ];
+}
+
+$activeVideo = null;
+if ($viewParam === 'tv') {
+    $targetVid = $_GET['v'] ?? $_GET['vid'] ?? null;
+    if ($targetVid) {
+        foreach ($videos as $vidItem) {
+            if (($vidItem['id'] ?? '') === $targetVid || ($vidItem['youtube_id'] ?? '') === $targetVid) {
+                $activeVideo = $vidItem;
+                break;
+            }
+        }
+    }
+    if (!$activeVideo && !empty($videos)) {
+        $activeVideo = $videos[0];
+    }
+}
 
 // Gallery from MySQL
 $gallery = [];
@@ -420,7 +470,16 @@ if ($article) {
 } elseif ($queryParam) {
     $pageTitle = "Pencarian: " . htmlspecialchars($queryParam, ENT_QUOTES, 'UTF-8') . " - Good News Nusantara | Jadi Tahu Indonesia";
 } elseif ($viewParam === 'tv') {
-    $pageTitle = "GNN TV & Video Nusantara - Good News Nusantara | Jadi Tahu Indonesia";
+    if (!empty($activeVideo)) {
+        $rawHeadline = trim(strip_tags($activeVideo['title'] ?? 'Video GNN TV'));
+        $pageTitle = $rawHeadline . " - GNN TV | Good News Nusantara";
+        $pageDesc = mb_substr(trim(strip_tags($activeVideo['description'] ?? 'Tayangan video dokumenter, inovasi, dan kabar kebanggaan nusantara di GNN TV.')), 0, 160);
+        if (!empty($activeVideo['youtube_id'])) {
+            $pageImage = "https://img.youtube.com/vi/" . $activeVideo['youtube_id'] . "/hqdefault.jpg";
+        }
+    } else {
+        $pageTitle = "GNN TV & Video Nusantara - Good News Nusantara | Jadi Tahu Indonesia";
+    }
 } elseif ($viewParam === 'gallery') {
     $pageTitle = "Galeri Foto Nusantara - Good News Nusantara | Jadi Tahu Indonesia";
 } elseif ($pageParam === 'pedoman') {
@@ -1369,36 +1428,176 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
     <?php elseif ($viewParam === 'tv'): ?>
       <!-- ========================================== -->
-      <!-- GNN TV / VIDEO NUSANTARA -->
+      <!-- GNN TV / YOUTUBE WATCH MECHANISM -->
       <!-- ========================================== -->
-      <section class="mb-10">
-        <div class="border-b border-zinc-200 pb-4 mb-6 flex items-center justify-between">
-          <div>
-            <h1 class="font-serif font-black text-3xl text-zinc-900">GNN TV & Video Nusantara</h1>
-            <p class="text-xs text-zinc-500 mt-1">Dokumenter, inovasi, dan kabar kebanggaan nusantara berformat audio visual.</p>
-          </div>
-        </div>
+      <section class="max-w-7xl mx-auto pb-12 pt-2 sm:pt-4">
+        
+        <?php if (!empty($activeVideo)): ?>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            
+            <!-- LEFT 8 COLS: BIG YOUTUBE PLAYER + TITLE + CHANNEL BAR + DESCRIPTION -->
+            <div class="lg:col-span-8 space-y-4">
+              
+              <!-- 1. Big 16:9 Video Player -->
+              <div class="aspect-video w-full bg-black rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative border border-zinc-200/80 dark:border-zinc-800">
+                <iframe id="activeTvPlayer" class="w-full h-full" src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($activeVideo['youtube_id']) ?>?autoplay=1&rel=0" title="<?= htmlspecialchars($activeVideo['title']) ?>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <?php foreach ($videos as $v): ?>
-            <div class="bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-xs flex flex-col">
-              <div class="aspect-video w-full bg-black relative">
-                <iframe class="w-full h-full" src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($v['youtube_id']) ?>" title="<?= htmlspecialchars($v['title']) ?>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-              </div>
-              <div class="p-4 flex-1 flex flex-col justify-between">
-                <div>
-                  <span class="text-[10px] font-bold text-red-700 uppercase"><?= htmlspecialchars($v['category'] ?? 'VIDEO') ?></span>
-                  <h3 class="font-bold text-sm text-zinc-900 line-clamp-2 mt-1 mb-2"><?= htmlspecialchars($v['title']) ?></h3>
-                  <p class="text-xs text-zinc-600 line-clamp-2"><?= htmlspecialchars($v['description'] ?? '') ?></p>
+              <!-- 2. Video Title -->
+              <h1 id="activeTvTitle" class="text-lg sm:text-xl md:text-2xl font-black text-zinc-950 dark:text-zinc-50 leading-snug tracking-tight mt-2 sm:mt-3">
+                <?= htmlspecialchars($activeVideo['title']) ?>
+              </h1>
+
+              <!-- 3. Channel Meta & Action Buttons (Exact YouTube Mechanism) -->
+              <div class="flex flex-wrap items-center justify-between gap-4 py-2 sm:py-3 border-b border-zinc-200 dark:border-zinc-800 text-xs">
+                
+                <!-- Channel Info + Subscribe -->
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-[#CC0000] text-white flex items-center justify-center font-black text-xs uppercase shadow-xs shrink-0 select-none">
+                    GNN
+                  </div>
+                  <div>
+                    <div class="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm flex items-center gap-1.5">
+                      <span id="activeTvAuthor"><?= htmlspecialchars($activeVideo['author'] ?? 'Redaksi GNN TV') ?></span>
+                      <svg class="w-3.5 h-3.5 text-blue-500 fill-current shrink-0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      <span class="bg-red-50 dark:bg-red-950/80 text-[#CC0000] text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900">
+                        REDAKSI
+                      </span>
+                    </div>
+                    <div class="text-zinc-500 dark:text-zinc-400 text-[11px] mt-0.5 flex items-center gap-1.5">
+                      <span>128 rb Pengikut</span>
+                      <span>•</span>
+                      <span id="activeTvDate"><?= htmlspecialchars($activeVideo['date'] ?? 'Oktober 2026') ?></span>
+                    </div>
+                  </div>
+                  <button type="button" onclick="toggleSubscribe(this)" class="ml-1 sm:ml-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-xs rounded-full transition shadow-xs cursor-pointer shrink-0">
+                    Langganan
+                  </button>
                 </div>
-                <div class="mt-4 pt-3 border-t border-zinc-100 text-[11px] text-zinc-400 flex justify-between">
-                  <span><?= htmlspecialchars($v['author'] ?? 'Tim Kreatif GNN') ?></span>
-                  <span><?= htmlspecialchars($v['duration'] ?? '04:15') ?></span>
+
+                <!-- Action Buttons: Suka, Bagikan, Buka di YouTube -->
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="toggleTvLike()" id="btnTvLike" class="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-full font-bold transition cursor-pointer text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                    <span id="tvLikeLabel">Suka</span>
+                  </button>
+
+                  <button type="button" onclick="copyTvLink()" id="btnTvShare" class="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-full font-bold transition cursor-pointer text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                    <span id="tvShareLabel">Bagikan</span>
+                  </button>
+
+                  <a id="activeTvYtLink" href="https://www.youtube.com/watch?v=<?= htmlspecialchars($activeVideo['youtube_id']) ?>" target="_blank" rel="noopener noreferrer" class="hidden sm:flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-full font-bold transition cursor-pointer text-xs">
+                    <svg class="w-4 h-4 text-red-600 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <span>Tonton di YouTube</span>
+                  </a>
                 </div>
               </div>
+
+              <!-- 4. Description Box (YouTube Rounded Card) -->
+              <div class="bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 space-y-2 mt-4">
+                <div class="font-extrabold flex flex-wrap items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                  <span id="activeTvCategory" class="uppercase tracking-wider text-[10px] bg-[#CC0000] text-white font-black px-2 py-0.5 rounded shadow-2xs">
+                    <?= htmlspecialchars($activeVideo['category'] ?? 'VIDEO') ?>
+                  </span>
+                  <span id="activeTvViews">1,5 rb x ditonton</span>
+                  <span>•</span>
+                  <span id="activeTvFullDate"><?= htmlspecialchars($activeVideo['date'] ?? 'Oktober 2026') ?></span>
+                  <span>•</span>
+                  <span class="text-zinc-400 font-mono text-[11px]">Durasi: <span id="activeTvDuration"><?= htmlspecialchars($activeVideo['duration'] ?? '04:15') ?></span></span>
+                </div>
+                <p id="activeTvDesc" class="leading-relaxed whitespace-pre-line pt-1 text-zinc-700 dark:text-zinc-300 font-normal">
+                  <?= htmlspecialchars($activeVideo['description'] ?? 'Dokumenter video positif nusantara persembahan Good News Nusantara.') ?>
+                </p>
+                <div class="pt-2 flex flex-wrap gap-2 text-xs font-bold text-[#CC0000] dark:text-red-400">
+                  <span>#GoodNewsNusantara</span>
+                  <span>#GNNTV</span>
+                  <span id="activeTvHashtag">#<?= preg_replace('/\s+/', '', $activeVideo['category'] ?? 'Video') ?></span>
+                  <span>#MakinTahuIndonesia</span>
+                </div>
+              </div>
+
             </div>
-          <?php endforeach; ?>
-        </div>
+
+            <!-- RIGHT 4 COLS: FILTER PILLS + PLAYLIST RECOMMENDATIONS (MATCHING SCREENSHOT) -->
+            <div class="lg:col-span-4 space-y-3.5">
+              
+              <!-- Filter Pills Carousel (Matches YouTube top pills in screenshot) -->
+              <div class="relative flex items-center">
+                <div id="tvCatPillsScroll" class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none scroll-smooth w-full" style="scrollbar-width: none; -ms-overflow-style: none;">
+                  <button type="button" onclick="filterTvPlaylist('SEMUA', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-2xs">Semua</button>
+                  <button type="button" onclick="filterTvPlaylist('KABAR BAIK', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Kabar Baik</button>
+                  <button type="button" onclick="filterTvPlaylist('INSPIRASI', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Inspirasi</button>
+                  <button type="button" onclick="filterTvPlaylist('PARIWISATA', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Pariwisata</button>
+                  <button type="button" onclick="filterTvPlaylist('BUDAYA', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Budaya</button>
+                  <button type="button" onclick="filterTvPlaylist('TEKNOLOGI', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Teknologi</button>
+                  <button type="button" onclick="filterTvPlaylist('EKONOMI', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Ekonomi</button>
+                  <button type="button" onclick="filterTvPlaylist('OLAHRAGA', this)" class="tv-pill px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300">Olahraga</button>
+                </div>
+                <button type="button" onclick="document.getElementById('tvCatPillsScroll').scrollBy({left: 120, behavior: 'smooth'})" class="shrink-0 p-1.5 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-full shadow-xs border border-zinc-200 dark:border-zinc-700 ml-1 hover:bg-zinc-100 cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+
+              <!-- Playlist Stack -->
+              <div id="tvPlaylistList" class="space-y-2 max-h-[85vh] overflow-y-auto pr-1">
+                <?php foreach ($videos as $vItem): 
+                  $isActive = (($vItem['id'] ?? '') === ($activeVideo['id'] ?? '') || ($vItem['youtube_id'] ?? '') === ($activeVideo['youtube_id'] ?? ''));
+                  $vJson = htmlspecialchars(json_encode([
+                    'id' => $vItem['id'] ?? '',
+                    'youtube_id' => $vItem['youtube_id'] ?? '',
+                    'title' => $vItem['title'] ?? '',
+                    'description' => $vItem['description'] ?? '',
+                    'category' => $vItem['category'] ?? 'VIDEO',
+                    'author' => $vItem['author'] ?? 'Redaksi GNN TV',
+                    'duration' => $vItem['duration'] ?? '04:15',
+                    'date' => $vItem['date'] ?? 'Oktober 2026'
+                  ]), ENT_QUOTES, 'UTF-8');
+                ?>
+                  <div data-id="<?= htmlspecialchars($vItem['id'] ?? $vItem['youtube_id']) ?>" data-category="<?= htmlspecialchars(strtoupper($vItem['category'] ?? '')) ?>" onclick='playTvVideo(<?= $vJson ?>, this)' class="tv-card group flex gap-3 p-2 rounded-2xl cursor-pointer transition <?= $isActive ? 'bg-red-50/80 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 shadow-xs' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-transparent' ?>">
+                    <!-- 16:9 Thumbnail with Duration Pill -->
+                    <div class="w-36 sm:w-40 aspect-video rounded-xl overflow-hidden shrink-0 relative bg-zinc-900 shadow-2xs border border-zinc-200/60 dark:border-zinc-800">
+                      <img src="https://img.youtube.com/vi/<?= htmlspecialchars($vItem['youtube_id']) ?>/hqdefault.jpg" alt="<?= htmlspecialchars($vItem['title']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                      <span class="absolute bottom-1 right-1 bg-black/85 text-white font-mono text-[9px] font-bold px-1.5 py-0.2 rounded">
+                        <?= htmlspecialchars($vItem['duration'] ?? '04:15') ?>
+                      </span>
+                      <div class="tv-playing-badge absolute inset-0 bg-black/40 items-center justify-center <?= $isActive ? 'flex' : 'hidden' ?>">
+                        <span class="bg-[#CC0000] text-white font-black text-[9px] uppercase px-2 py-0.5 rounded shadow-sm">
+                          Memutar
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Video Text Details -->
+                    <div class="flex flex-col justify-between py-0.5 min-w-0 flex-1">
+                      <div>
+                        <h3 class="tv-card-title text-xs font-bold leading-snug line-clamp-2 transition <?= $isActive ? 'text-[#CC0000] dark:text-red-400 font-extrabold' : 'text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000]' ?>">
+                          <?= htmlspecialchars($vItem['title']) ?>
+                        </h3>
+                        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1 flex items-center gap-1">
+                          <span><?= htmlspecialchars($vItem['author'] ?? 'Redaksi GNN') ?></span>
+                          <svg class="w-3 h-3 text-zinc-400 fill-current shrink-0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        </div>
+                      </div>
+                      <div class="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium line-clamp-1 mt-1">
+                        <span>1,2 rb x ditonton</span>
+                        <span>•</span>
+                        <span><?= htmlspecialchars($vItem['date'] ?? '3 hari lalu') ?></span>
+                      </div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+
+            </div>
+
+          </div>
+        <?php else: ?>
+          <div class="py-16 text-center text-zinc-400">
+            <p class="text-sm">Belum ada video yang tersedia.</p>
+          </div>
+        <?php endif; ?>
+
       </section>
 
     <?php elseif ($viewParam === 'gallery'): ?>
@@ -2030,7 +2229,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                   $yId = $v['youtube_id'] ?? '';
                   $thumb = !empty($v['image_url']) ? $v['image_url'] : ($yId ? "https://img.youtube.com/vi/$yId/hqdefault.jpg" : 'https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?auto=format&fit=crop&w=800&q=80');
               ?>
-                <div onclick="openVideoModal('<?= htmlspecialchars($yId) ?>', '<?= htmlspecialchars(addslashes($v['title'])) ?>')" class="w-[280px] sm:w-[350px] aspect-16/9 rounded-2xl overflow-hidden relative group shrink-0 shadow-xs cursor-pointer select-none bg-black">
+                <a href="?view=tv&v=<?= urlencode(!empty($v['id']) ? $v['id'] : $yId) ?>" class="w-[280px] sm:w-[350px] aspect-16/9 rounded-2xl overflow-hidden relative group shrink-0 shadow-xs cursor-pointer select-none bg-black block">
                   <img src="<?= htmlspecialchars($thumb) ?>" alt="<?= htmlspecialchars($v['title']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-85">
                   <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent"></div>
                   
@@ -2048,7 +2247,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                       <p class="text-[11px] text-zinc-300 line-clamp-1 mt-1 font-medium"><?= htmlspecialchars($v['description']) ?></p>
                     <?php endif; ?>
                   </div>
-                </div>
+                </a>
               <?php endforeach; ?>
             </div>
 
@@ -2509,22 +2708,135 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
     function openVideoModal(yId, title) {
       if (!yId) return;
-      const modal = document.getElementById('modalGnnTvPlayer');
-      const iframe = document.getElementById('modalGnnTvIframe');
-      const titleEl = document.getElementById('modalGnnTvTitle');
-      if (modal && iframe) {
-        iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(yId) + '?autoplay=1';
-        if (titleEl) titleEl.textContent = title || 'Video GNN TV';
-        modal.classList.remove('hidden');
+      window.location.href = '?view=tv&v=' + encodeURIComponent(yId);
+    }
+
+    function playTvVideo(v, el) {
+      if (!v || !v.youtube_id) return;
+      
+      // 1. Update Player iframe
+      const iframe = document.getElementById('activeTvPlayer');
+      if (iframe) {
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v.youtube_id) + '?autoplay=1&rel=0';
+      }
+      
+      // 2. Update Title & Meta
+      const titleEl = document.getElementById('activeTvTitle');
+      if (titleEl) titleEl.textContent = v.title;
+
+      const authorEl = document.getElementById('activeTvAuthor');
+      if (authorEl) authorEl.textContent = v.author || 'Redaksi GNN TV';
+
+      const dateEl = document.getElementById('activeTvDate');
+      if (dateEl) dateEl.textContent = v.date || 'Oktober 2026';
+
+      const fullDateEl = document.getElementById('activeTvFullDate');
+      if (fullDateEl) fullDateEl.textContent = v.date || 'Oktober 2026';
+
+      const catEl = document.getElementById('activeTvCategory');
+      if (catEl) catEl.textContent = v.category || 'VIDEO';
+
+      const descEl = document.getElementById('activeTvDesc');
+      if (descEl) descEl.textContent = v.description || 'Dokumenter video positif nusantara persembahan Good News Nusantara.';
+
+      const durEl = document.getElementById('activeTvDuration');
+      if (durEl) durEl.textContent = v.duration || '04:15';
+
+      const hashEl = document.getElementById('activeTvHashtag');
+      if (hashEl) hashEl.textContent = '#' + (v.category || 'Video').replace(/\s+/g, '');
+      
+      const ytLink = document.getElementById('activeTvYtLink');
+      if (ytLink) ytLink.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(v.youtube_id);
+
+      // 3. Update Playlist active highlight
+      document.querySelectorAll('.tv-card').forEach(c => {
+        c.classList.remove('bg-red-50/80', 'dark:bg-red-950/40', 'border-red-200', 'dark:border-red-900/60', 'shadow-xs');
+        c.classList.add('hover:bg-zinc-100', 'dark:hover:bg-zinc-800/80', 'border-transparent');
+        const badge = c.querySelector('.tv-playing-badge');
+        if (badge) { badge.classList.remove('flex'); badge.classList.add('hidden'); }
+        const title = c.querySelector('.tv-card-title');
+        if (title) { title.classList.remove('text-[#CC0000]', 'dark:text-red-400', 'font-extrabold'); title.classList.add('text-zinc-900', 'dark:text-zinc-100'); }
+      });
+
+      if (el) {
+        el.classList.add('bg-red-50/80', 'dark:bg-red-950/40', 'border-red-200', 'dark:border-red-900/60', 'shadow-xs');
+        el.classList.remove('border-transparent');
+        const badge = el.querySelector('.tv-playing-badge');
+        if (badge) { badge.classList.remove('hidden'); badge.classList.add('flex'); }
+        const title = el.querySelector('.tv-card-title');
+        if (title) { title.classList.add('text-[#CC0000]', 'dark:text-red-400', 'font-extrabold'); title.classList.remove('text-zinc-900', 'dark:text-zinc-100'); }
+      }
+
+      // 4. Update URL without page reload
+      const newUrl = '?view=tv&v=' + encodeURIComponent(v.id || v.youtube_id);
+      window.history.pushState({ videoId: v.id }, v.title, newUrl);
+
+      // 5. Scroll smoothly to player if on mobile
+      if (window.innerWidth < 1024) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
 
-    function closeVideoModal() {
-      const modal = document.getElementById('modalGnnTvPlayer');
-      const iframe = document.getElementById('modalGnnTvIframe');
-      if (modal && iframe) {
-        iframe.src = '';
-        modal.classList.add('hidden');
+    function filterTvPlaylist(cat, btn) {
+      document.querySelectorAll('.tv-pill').forEach(p => {
+        p.classList.remove('bg-zinc-900', 'text-white', 'dark:bg-white', 'dark:text-zinc-900', 'shadow-2xs');
+        p.classList.add('bg-zinc-100', 'dark:bg-zinc-800', 'hover:bg-zinc-200', 'dark:hover:bg-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+      });
+      if (btn) {
+        btn.classList.add('bg-zinc-900', 'text-white', 'dark:bg-white', 'dark:text-zinc-900', 'shadow-2xs');
+        btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800', 'hover:bg-zinc-200', 'dark:hover:bg-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+      }
+
+      const cards = document.querySelectorAll('.tv-card');
+      const target = (cat || 'SEMUA').toUpperCase();
+      cards.forEach(c => {
+        const cardCat = (c.getAttribute('data-category') || '').toUpperCase();
+        if (target === 'SEMUA' || cardCat === target || cardCat.includes(target) || target.includes(cardCat)) {
+          c.style.display = 'flex';
+        } else {
+          c.style.display = 'none';
+        }
+      });
+    }
+
+    function copyTvLink() {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        const label = document.getElementById('tvShareLabel');
+        if (label) {
+          const orig = label.textContent;
+          label.textContent = 'Tersalin!';
+          setTimeout(() => { label.textContent = orig; }, 2000);
+        }
+      });
+    }
+
+    let isTvLiked = false;
+    function toggleTvLike() {
+      isTvLiked = !isTvLiked;
+      const btn = document.getElementById('btnTvLike');
+      const label = document.getElementById('tvLikeLabel');
+      if (btn && label) {
+        if (isTvLiked) {
+          btn.classList.add('bg-red-50', 'text-red-600', 'dark:bg-red-950/60', 'dark:text-red-400');
+          label.textContent = 'Disukai';
+        } else {
+          btn.classList.remove('bg-red-50', 'text-red-600', 'dark:bg-red-950/60', 'dark:text-red-400');
+          label.textContent = 'Suka';
+        }
+      }
+    }
+
+    function toggleSubscribe(btn) {
+      if (!btn) return;
+      if (btn.textContent.trim() === 'Langganan') {
+        btn.textContent = 'Disubscribe ✓';
+        btn.classList.remove('bg-zinc-900', 'dark:bg-zinc-100', 'text-white', 'dark:text-zinc-900');
+        btn.classList.add('bg-zinc-200', 'dark:bg-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+      } else {
+        btn.textContent = 'Langganan';
+        btn.classList.remove('bg-zinc-200', 'dark:bg-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+        btn.classList.add('bg-zinc-900', 'dark:bg-zinc-100', 'text-white', 'dark:text-zinc-900');
       }
     }
 
