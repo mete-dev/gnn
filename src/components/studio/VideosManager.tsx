@@ -33,7 +33,7 @@ export const STUDIO_CATEGORY_MAP: Record<string, string[]> = {
   'POLITIK': ['Kebijakan', 'Nasional', 'Asean', 'Internasional'],
   'HUKUM': ['Hukum', 'Kriminal', 'Investigasi'],
   'SOSIAL': ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra'],
-  'LIFESTYLE': ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Media Kreatif', 'Film & Series'],
+  'LIFESTYLE': ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Media Kreatif', 'Film & Series', 'Pariwisata'],
 };
 
 export const VideosManager: React.FC<VideosManagerProps> = ({

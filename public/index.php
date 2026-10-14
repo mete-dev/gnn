@@ -246,6 +246,9 @@ if ($categoryParam) {
         if (!$match && strcasecmp($categoryParam, 'SEJARAH') === 0) {
             $match = (strcasecmp($c, 'SEJARAH') === 0 || stripos($sc, 'sejarah') !== false);
         }
+        if (!$match && strcasecmp($categoryParam, 'LIFESTYLE') === 0) {
+            $match = (strcasecmp($c, 'PARIWISATA') === 0 || stripos($sc, 'pariwisata') !== false);
+        }
         return $match;
     });
 } elseif ($queryParam) {
@@ -370,7 +373,7 @@ $trendingSosial = array_slice($trendingSosial, 0, 3);
 $trendingLifestyle = array_values(array_filter($allArticles, function($a) {
     $c = strtoupper($a['category'] ?? '');
     $sc = strtolower($a['sub_category'] ?? '');
-    return $c === 'LIFESTYLE' || in_array($sc, ['religi', 'olahraga', 'hiburan', 'kesehatan', 'media kreatif', 'film & series']);
+    return $c === 'LIFESTYLE' || $c === 'PARIWISATA' || in_array($sc, ['religi', 'olahraga', 'hiburan', 'kesehatan', 'media kreatif', 'film & series', 'pariwisata']);
 }));
 usort($trendingLifestyle, function($a, $b) {
     return ($b['popular_rank'] ?? 0) <=> ($a['popular_rank'] ?? 0) ?: ($b['views'] ?? 0) <=> ($a['views'] ?? 0) ?: strtotime($b['created_at'] ?? 0) <=> strtotime($a['created_at'] ?? 0);
@@ -729,7 +732,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
             ['name' => 'Politik', 'subs' => ['Kebijakan', 'Nasional', 'Asean', 'Internasional']],
             ['name' => 'Hukum', 'subs' => ['Hukum', 'Kriminal', 'Investigasi']],
             ['name' => 'Sosial', 'subs' => ['Sosial', 'Sejarah', 'Budaya', 'Gastronomi', 'Seni & Sastra']],
-            ['name' => 'Lifestyle', 'subs' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Media Kreatif', 'Film & Series']]
+            ['name' => 'Lifestyle', 'subs' => ['Religi', 'Olahraga', 'Hiburan', 'Kesehatan', 'Media Kreatif', 'Film & Series', 'Pariwisata']]
         ];
 
         foreach ($navItems as $item):
