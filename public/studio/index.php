@@ -1014,6 +1014,12 @@ $categoriesList = array_keys($navbarCategories);
     .font-serif { font-family: 'Roboto Serif', Georgia, serif; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+    #editorContent a, .prose a {
+      color: #CC0000 !important;
+      text-decoration: underline !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+    }
   </style>
 </head>
 <body class="bg-[#F8F9FA] text-zinc-900 antialiased min-h-screen">
@@ -1951,82 +1957,82 @@ $categoriesList = array_keys($navbarCategories);
                   <!-- WYSIWYG Toolbar -->
                   <div class="border border-zinc-200 rounded-t-2xl bg-zinc-100/80 p-2 flex items-center flex-wrap gap-1 border-b-0 shadow-2xs">
                     <!-- Heading H2 -->
-                    <button type="button" onclick="formatEditor('formatBlock', '<h2>')" class="px-2.5 py-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Heading 2">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('formatBlock', '<h2>')" class="px-2.5 py-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Heading 2">
                       H2
                     </button>
 
                     <!-- Heading H3 -->
-                    <button type="button" onclick="formatEditor('formatBlock', '<h3>')" class="px-2.5 py-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Heading 3">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('formatBlock', '<h3>')" class="px-2.5 py-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Heading 3">
                       H3
                     </button>
 
                     <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
 
                     <!-- Bold -->
-                    <button type="button" onclick="formatEditor('bold')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-black text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Tebal (Bold)">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('bold')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-black text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Tebal (Bold)">
                       B
                     </button>
 
                     <!-- Italic -->
-                    <button type="button" onclick="formatEditor('italic')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs italic font-serif text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Miring (Italic)">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('italic')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs italic font-serif text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Miring (Italic)">
                       I
                     </button>
 
                     <!-- Underline -->
-                    <button type="button" onclick="formatEditor('underline')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs underline font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Garis Bawah (Underline)">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('underline')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs underline font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Garis Bawah (Underline)">
                       U
                     </button>
 
                     <!-- Quote Block -->
-                    <button type="button" onclick="formatEditor('formatBlock', '<blockquote>')" class="px-2 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Kutipan">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('formatBlock', '<blockquote>')" class="px-2 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Kutipan">
                       &ldquo;&rdquo;
                     </button>
 
                     <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
 
                     <!-- Penomoran Poin 1, 2, 3 dst (Ordered List) -->
-                    <button type="button" onclick="formatEditor('insertOrderedList')" class="px-2 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-0.5" title="Penomoran Poin (1, 2, 3...)">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('insertOrderedList')" class="px-2 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-0.5" title="Penomoran Poin (1, 2, 3...)">
                       <span>1.</span>
                     </button>
 
                     <!-- Bullet List -->
-                    <button type="button" onclick="formatEditor('insertUnorderedList')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Daftar Poin (Bullet)">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('insertUnorderedList')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Daftar Poin (Bullet)">
                       &bull;
                     </button>
 
                     <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
 
                     <!-- Perataan Kiri -->
-                    <button type="button" onclick="formatEditor('justifyLeft')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Kiri">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('justifyLeft')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Kiri">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h14"/></svg>
                     </button>
 
                     <!-- Perataan Tengah -->
-                    <button type="button" onclick="formatEditor('justifyCenter')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Tengah">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('justifyCenter')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Tengah">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 12h10M5 18h14"/></svg>
                     </button>
 
                     <!-- Perataan Kanan -->
-                    <button type="button" onclick="formatEditor('justifyRight')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Kanan">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="formatEditor('justifyRight')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Kanan">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 12h10M6 18h14"/></svg>
                     </button>
 
                     <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
 
                     <!-- Link Teks (Teks yang mengandung link) -->
-                    <button type="button" onclick="insertArticleLink()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1" title="Sisipkan Link Tautan">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertArticleLink()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1 cursor-pointer" title="Sisipkan Link Tautan">
                       <svg class="w-3.5 h-3.5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                       <span>Link</span>
                     </button>
 
                     <!-- Sisipkan Foto -->
-                    <button type="button" onclick="insertArticleImage()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1.5" title="Sisipkan Foto ke Dalam Naskah">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertArticleImage()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1.5 cursor-pointer" title="Sisipkan Foto ke Dalam Naskah">
                       <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                       <span>Sisipkan Foto</span>
                     </button>
 
                     <!-- Sisipkan Media Sosial -->
-                    <button type="button" onclick="insertSocialEmbed()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1.5" title="Sisipkan Media Sosial (Embed Instagram / Twitter / YouTube)">
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertSocialEmbed()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1.5 cursor-pointer" title="Sisipkan Media Sosial (Embed Instagram / Twitter / YouTube)">
                       <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                       <span>Sisipkan Media Sosial</span>
                     </button>
@@ -2162,8 +2168,10 @@ $categoriesList = array_keys($navbarCategories);
                   <button type="button" onclick="applyCropSetting()" class="px-5 py-2 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full">Terapkan Pengaturan</button>
                 </div>
               </div>
+            </div>
+
             <!-- MODAL: SISIPKAN FOTO KE DALAM ARTIKEL (UNGGAH DENGAN KOMPRESI <= 60KB) -->
-            <div id="modalInsertArticlePhoto" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+            <div id="modalInsertArticlePhoto" style="display: none;" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4">
               <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
                 <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
                   <div class="flex items-center gap-2.5">
@@ -2218,7 +2226,7 @@ $categoriesList = array_keys($navbarCategories);
             </div>
 
             <!-- MODAL: SISIPKAN MEDIA SOSIAL DENGAN PREVIEW (FACEBOOK, INSTAGRAM, X / TWITTER, YOUTUBE) -->
-            <div id="modalSocialEmbed" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+            <div id="modalSocialEmbed" style="display: none;" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4">
               <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
                 <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
                   <div class="flex items-center gap-2.5">
@@ -2350,21 +2358,45 @@ $categoriesList = array_keys($navbarCategories);
               }
 
               function insertArticleLink() {
-                const url = prompt('Masukkan alamat URL tautan / link:', 'https://');
-                if (url && url.trim() !== '' && url !== 'https://') {
-                  const selection = window.getSelection();
-                  if (selection && selection.toString().length > 0) {
-                    formatEditor('createLink', url.trim());
-                  } else {
-                    const text = prompt('Masukkan teks untuk tautan ini:', url.trim());
-                    if (text) {
-                      const linkHtml = `<a href="${url.trim()}" target="_blank" rel="noopener noreferrer" class="text-[#CC0000] underline font-bold">${text}</a>&nbsp;`;
-                      document.getElementById('editorContent').focus();
-                      document.execCommand('insertHTML', false, linkHtml);
-                      syncEditorToTextarea();
+                saveEditorSelection();
+                const sel = window.getSelection();
+                let selectedText = '';
+                if (sel && sel.rangeCount > 0) {
+                  selectedText = sel.toString().trim();
+                }
+
+                const url = prompt('Masukkan alamat URL tautan (link):', 'https://');
+                if (!url || url.trim() === '' || url.trim() === 'https://') return;
+                const cleanUrl = url.trim();
+
+                document.getElementById('editorContent').focus();
+                restoreEditorSelection();
+
+                if (selectedText.length > 0) {
+                  document.execCommand('createLink', false, cleanUrl);
+                  const currentSel = window.getSelection();
+                  if (currentSel && currentSel.anchorNode) {
+                    let parent = currentSel.anchorNode.parentElement;
+                    while (parent && parent.tagName !== 'A' && parent.id !== 'editorContent') {
+                      parent = parent.parentElement;
+                    }
+                    if (parent && parent.tagName === 'A') {
+                      parent.setAttribute('target', '_blank');
+                      parent.setAttribute('rel', 'noopener noreferrer');
+                      parent.className = 'text-[#CC0000] underline font-bold';
+                      parent.style.color = '#CC0000';
+                      parent.style.textDecoration = 'underline';
+                      parent.style.fontWeight = 'bold';
                     }
                   }
+                } else {
+                  const displayText = prompt('Masukkan teks tampilan untuk tautan ini:', cleanUrl);
+                  if (displayText && displayText.trim() !== '') {
+                    const linkHtml = `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #CC0000; text-decoration: underline; font-weight: bold;" class="text-[#CC0000] underline font-bold">${displayText.trim()}</a>&nbsp;`;
+                    document.execCommand('insertHTML', false, linkHtml);
+                  }
                 }
+                syncEditorToTextarea();
               }
 
               // Utility: Kompres gambar ke format WebP/JPEG di bawah 60 KB dengan Canvas agar tetap jernih & tajam
@@ -2477,15 +2509,28 @@ $categoriesList = array_keys($navbarCategories);
               function insertArticleImage() {
                 saveEditorSelection();
                 currentInlineCompressedDataUrl = null;
-                document.getElementById('fileUploadArticleInline').value = '';
-                document.getElementById('inlinePhotoPreviewContainer').classList.add('hidden');
-                document.getElementById('inlinePhotoCaption').value = '';
-                document.getElementById('btnConfirmInsertPhoto').disabled = true;
-                document.getElementById('modalInsertArticlePhoto').classList.remove('hidden');
+                const fileInput = document.getElementById('fileUploadArticleInline');
+                if (fileInput) fileInput.value = '';
+                const previewCont = document.getElementById('inlinePhotoPreviewContainer');
+                if (previewCont) previewCont.classList.add('hidden');
+                const captionInput = document.getElementById('inlinePhotoCaption');
+                if (captionInput) captionInput.value = '';
+                const btnConfirm = document.getElementById('btnConfirmInsertPhoto');
+                if (btnConfirm) btnConfirm.disabled = true;
+
+                const modal = document.getElementById('modalInsertArticlePhoto');
+                if (modal) {
+                  modal.classList.remove('hidden');
+                  modal.style.display = 'flex';
+                }
               }
 
               function closeInsertPhotoModal() {
-                document.getElementById('modalInsertArticlePhoto').classList.add('hidden');
+                const modal = document.getElementById('modalInsertArticlePhoto');
+                if (modal) {
+                  modal.classList.add('hidden');
+                  modal.style.display = 'none';
+                }
               }
 
               async function handleArticleImageSelected(input) {
@@ -2538,15 +2583,27 @@ $categoriesList = array_keys($navbarCategories);
 
               function insertSocialEmbed() {
                 saveEditorSelection();
-                document.getElementById('socialEmbedUrlInput').value = '';
-                document.getElementById('socialPreviewArea').innerHTML = 'Masukkan URL di atas dan klik "Pratinjau" untuk melihat tampilan embed media sosial.';
-                document.getElementById('btnConfirmSocialEmbed').disabled = true;
+                const urlInput = document.getElementById('socialEmbedUrlInput');
+                if (urlInput) urlInput.value = '';
+                const previewArea = document.getElementById('socialPreviewArea');
+                if (previewArea) previewArea.innerHTML = 'Masukkan URL di atas dan klik "Pratinjau" untuk melihat tampilan embed media sosial.';
+                const btnConfirm = document.getElementById('btnConfirmSocialEmbed');
+                if (btnConfirm) btnConfirm.disabled = true;
                 setSocialPlatform('youtube');
-                document.getElementById('modalSocialEmbed').classList.remove('hidden');
+
+                const modal = document.getElementById('modalSocialEmbed');
+                if (modal) {
+                  modal.classList.remove('hidden');
+                  modal.style.display = 'flex';
+                }
               }
 
               function closeSocialEmbedModal() {
-                document.getElementById('modalSocialEmbed').classList.add('hidden');
+                const modal = document.getElementById('modalSocialEmbed');
+                if (modal) {
+                  modal.classList.add('hidden');
+                  modal.style.display = 'none';
+                }
               }
 
               function setSocialPlatform(platform) {
