@@ -1877,7 +1877,7 @@ $categoriesList = array_keys($navbarCategories);
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-200/80">
                     <div>
                       <label class="text-xs font-bold text-zinc-800 uppercase tracking-wider block">
-                        Foto Cover Artikel <span class="text-[#CC0000]">*</span>
+                        Foto Cover <span class="text-[#CC0000]">*</span>
                       </label>
                       <p class="text-[11px] text-zinc-500">Rasio ideal 16:9 lanskap resolusi tinggi</p>
                     </div>
@@ -1940,7 +1940,7 @@ $categoriesList = array_keys($navbarCategories);
                 <div>
                   <div class="flex items-center justify-between mb-1.5">
                     <label class="text-xs font-bold text-zinc-800 uppercase tracking-wider">
-                      Isi Artikel <span class="text-[#CC0000]">*</span> <span class="text-zinc-400 font-normal lowercase">(Tampilan WYSIWYG)</span>
+                      Isi Artikel <span class="text-[#CC0000]">*</span>
                     </label>
                     <span class="text-[11px] text-zinc-400 font-semibold" id="wordCountLabel">0 kata</span>
                   </div>
@@ -1969,17 +1969,52 @@ $categoriesList = array_keys($navbarCategories);
                       I
                     </button>
 
+                    <!-- Underline -->
+                    <button type="button" onclick="formatEditor('underline')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs underline font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Garis Bawah (Underline)">
+                      U
+                    </button>
+
                     <!-- Quote Block -->
                     <button type="button" onclick="formatEditor('formatBlock', '<blockquote>')" class="px-2 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Kutipan">
                       &ldquo;&rdquo;
                     </button>
 
+                    <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
+
+                    <!-- Penomoran Poin 1, 2, 3 dst (Ordered List) -->
+                    <button type="button" onclick="formatEditor('insertOrderedList')" class="px-2 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-0.5" title="Penomoran Poin (1, 2, 3...)">
+                      <span>1.</span>
+                    </button>
+
                     <!-- Bullet List -->
-                    <button type="button" onclick="formatEditor('insertUnorderedList')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Daftar Poin">
+                    <button type="button" onclick="formatEditor('insertUnorderedList')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Daftar Poin (Bullet)">
                       &bull;
                     </button>
 
                     <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
+
+                    <!-- Perataan Kiri -->
+                    <button type="button" onclick="formatEditor('justifyLeft')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Kiri">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h14"/></svg>
+                    </button>
+
+                    <!-- Perataan Tengah -->
+                    <button type="button" onclick="formatEditor('justifyCenter')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Tengah">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 12h10M5 18h14"/></svg>
+                    </button>
+
+                    <!-- Perataan Kanan -->
+                    <button type="button" onclick="formatEditor('justifyRight')" class="p-1.5 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-zinc-700 transition w-7 h-7 flex items-center justify-center" title="Rata Kanan">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 12h10M6 18h14"/></svg>
+                    </button>
+
+                    <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
+
+                    <!-- Link Teks (Teks yang mengandung link) -->
+                    <button type="button" onclick="insertArticleLink()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1" title="Sisipkan Link Tautan">
+                      <svg class="w-3.5 h-3.5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                      <span>Link</span>
+                    </button>
 
                     <!-- Sisipkan Foto -->
                     <button type="button" onclick="insertArticleImage()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition flex items-center gap-1.5" title="Sisipkan Foto ke Dalam Naskah">
@@ -2027,28 +2062,23 @@ $categoriesList = array_keys($navbarCategories);
                   <input type="text" name="keywords" value="<?= htmlspecialchars($editArticle['keywords'] ?? 'kabar baik, indonesia, inovasi nusantara') ?>" placeholder="Contoh: bromo, pariwisata, jawa timur, inspirasi indonesia" class="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none">
                 </div>
 
-                <!-- 6. Penulis, Status Penerbitan & User Notice -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label class="block text-xs font-bold text-zinc-800 uppercase tracking-wider mb-1.5">Nama Penulis</label>
-                    <input type="text" name="author" value="<?= htmlspecialchars($editArticle['author'] ?? $currentUser['name']) ?>" <?= ($currentUserRole === 'sahabat') ? 'readonly' : '' ?> class="w-full px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none <?= ($currentUserRole === 'sahabat') ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-50' ?>">
-                  </div>
+                <!-- 6. Hidden Penulis Otomatis & Status Penerbitan -->
+                <input type="hidden" name="author" value="<?= htmlspecialchars($editArticle['author'] ?? $currentUser['name']) ?>">
 
-                  <div>
-                    <label class="block text-xs font-bold text-zinc-800 uppercase tracking-wider mb-1.5">Status Penerbitan</label>
-                    <?php if ($currentUserRole === 'sahabat'): ?>
-                      <input type="hidden" name="status" value="draft">
-                      <div class="px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs font-bold text-amber-800 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Draft (Akan ditinjau oleh Reviewer / Redaksi)</span>
-                      </div>
-                    <?php else: ?>
-                      <select name="status" class="w-full px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none bg-white cursor-pointer">
-                        <option value="publish" <?= ($editArticle['status'] ?? 'publish') === 'publish' ? 'selected' : '' ?>>Terbitkan (Publish)</option>
-                        <option value="draft" <?= ($editArticle['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Simpan Sebagai Draf (Draft)</option>
-                      </select>
-                    <?php endif; ?>
-                  </div>
+                <div class="pt-2">
+                  <label class="block text-xs font-bold text-zinc-800 uppercase tracking-wider mb-1.5">Status Penerbitan</label>
+                  <?php if ($currentUserRole === 'sahabat'): ?>
+                    <input type="hidden" name="status" value="draft">
+                    <div class="px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs font-bold text-amber-800 flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                      <span>Draft (Akan ditinjau oleh Reviewer / Redaksi)</span>
+                    </div>
+                  <?php else: ?>
+                    <select name="status" class="w-full max-w-sm px-4 py-2.5 text-xs font-bold border border-zinc-200 rounded-2xl focus:border-[#CC0000] outline-none bg-white cursor-pointer">
+                      <option value="publish" <?= ($editArticle['status'] ?? 'publish') === 'publish' ? 'selected' : '' ?>>Terbitkan (Publish)</option>
+                      <option value="draft" <?= ($editArticle['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Simpan Sebagai Draf (Draft)</option>
+                    </select>
+                  <?php endif; ?>
                 </div>
 
                 <!-- User Notice Box -->
@@ -2210,6 +2240,24 @@ $categoriesList = array_keys($navbarCategories);
                   const text = editor.innerText.trim();
                   const words = text ? text.split(/\s+/).length : 0;
                   label.textContent = words + ' kata';
+                }
+              }
+
+              function insertArticleLink() {
+                const url = prompt('Masukkan alamat URL tautan / link:', 'https://');
+                if (url && url.trim() !== '' && url !== 'https://') {
+                  const selection = window.getSelection();
+                  if (selection && selection.toString().length > 0) {
+                    formatEditor('createLink', url.trim());
+                  } else {
+                    const text = prompt('Masukkan teks untuk tautan ini:', url.trim());
+                    if (text) {
+                      const linkHtml = `<a href="${url.trim()}" target="_blank" rel="noopener noreferrer" class="text-[#CC0000] underline font-bold">${text}</a>&nbsp;`;
+                      document.getElementById('editorContent').focus();
+                      document.execCommand('insertHTML', false, linkHtml);
+                      syncEditorToTextarea();
+                    }
+                  }
                 }
               }
 

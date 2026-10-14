@@ -10,6 +10,9 @@ import {
   ListOrdered,
   Quote,
   Link as LinkIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
   UploadCloud,
   FileImage,
   Check,
@@ -275,6 +278,34 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
             className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900 transition cursor-pointer"
           >
             <Quote className="w-4 h-4" />
+          </button>
+
+          <span className="w-px h-5 bg-zinc-200 mx-1" />
+
+          {/* Alignment */}
+          <button
+            type="button"
+            onClick={() => format('justifyLeft')}
+            title="Rata Kiri"
+            className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900 transition cursor-pointer"
+          >
+            <AlignLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => format('justifyCenter')}
+            title="Rata Tengah"
+            className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900 transition cursor-pointer"
+          >
+            <AlignCenter className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => format('justifyRight')}
+            title="Rata Kanan"
+            className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900 transition cursor-pointer"
+          >
+            <AlignRight className="w-4 h-4" />
           </button>
 
           <span className="w-px h-5 bg-zinc-200 mx-1" />

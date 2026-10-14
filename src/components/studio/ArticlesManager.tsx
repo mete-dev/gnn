@@ -641,7 +641,7 @@ export const ArticlesManager: React.FC<ArticlesManagerProps> = ({
             {/* FOTO COVER */}
             <div className="space-y-3 bg-zinc-50/70 border border-zinc-200 p-4 rounded-2xl">
               <label className="text-xs font-extrabold uppercase tracking-wider text-zinc-700 block">
-                Foto Cover Artikel *
+                Foto Cover *
               </label>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
