@@ -2030,13 +2030,6 @@ $categoriesList = array_keys($navbarCategories);
                       <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                       <span>Sisipkan Media Sosial</span>
                     </button>
-
-                    <div class="h-5 w-[1px] bg-zinc-300 mx-1"></div>
-
-                    <!-- Poin Utama / Fokus Cepat -->
-                    <button type="button" onclick="toggleBulletsHelper()" class="px-2.5 py-1 bg-white hover:bg-zinc-200 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 transition" title="Atur Poin Utama Artikel">
-                      Poin Ringkasan
-                    </button>
                   </div>
 
                   <!-- WYSIWYG Editable Document Workspace -->
@@ -2044,17 +2037,6 @@ $categoriesList = array_keys($navbarCategories);
 
                   <!-- Hidden Textarea for Form POST Sync -->
                   <textarea name="content" id="hiddenContentTextarea" required class="hidden"><?= htmlspecialchars($editArticle['content'] ?? '') ?></textarea>
-                </div>
-
-                <!-- Bullets / Poin Ringkasan (Expandable) -->
-                <div id="bulletsContainer" class="p-4 border border-zinc-200 rounded-2xl bg-zinc-50/70 space-y-2">
-                  <div class="flex items-center justify-between">
-                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                      Poin Utama / Ringkasan Dokumen (1 Poin Per Baris)
-                    </label>
-                    <span class="text-[10px] text-zinc-400">Otomatis tampil rapi di ringkasan berita</span>
-                  </div>
-                  <textarea name="bullets" rows="3" placeholder="Poin penting pertama&#10;Poin penting kedua&#10;Poin penting ketiga" class="w-full px-4 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none font-mono bg-white"><?= htmlspecialchars($editArticle['bullets_text'] ?? '') ?></textarea>
                 </div>
 
                 <!-- 5. Kata Kunci / Tag -->
