@@ -44,7 +44,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
 
   // Social Media Embed Modal State
   const [showSocialModal, setShowSocialModal] = useState<boolean>(false);
-  const [socialPlatform, setSocialPlatform] = useState<'youtube' | 'instagram' | 'facebook'>('youtube');
+  const [socialPlatform, setSocialPlatform] = useState<'youtube' | 'instagram' | 'twitter' | 'facebook'>('youtube');
   const [socialUrl, setSocialUrl] = useState<string>('');
 
   const editorRef = useRef<HTMLDivElement>(null);
@@ -114,8 +114,8 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
     setCompressionMsg('Mengompresi gambar...');
 
     try {
-      const res = await compressImageToUnder50KB(file, 50);
-      setCompressionMsg(`✓ Foto berhasil disisipkan: ${res.sizeKb}KB`);
+      const res = await compressImageToUnder50KB(file, 60);
+      setCompressionMsg(`✓ Foto berhasil disisipkan: ${res.sizeKb}KB (Jernih & Ringan)`);
       format('insertImage', res.dataUrl);
       setTimeout(() => setCompressionMsg(null), 4000);
     } catch (err: any) {
@@ -175,6 +175,16 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
       embedHtml = `
         <div class="embed-social embed-instagram my-5 max-w-md mx-auto rounded-2xl overflow-hidden shadow-md border border-zinc-200 bg-white p-2" contenteditable="false">
           <iframe src="${embedSrc}" width="100%" height="480" frameborder="0" scrolling="no" allowtransparency="true" class="w-full h-[480px] rounded-xl"></iframe>
+        </div>
+        <p><br></p>
+      `;
+    } else if (socialPlatform === 'twitter') {
+      embedHtml = `
+        <div class="embed-social embed-twitter my-5 max-w-lg mx-auto rounded-2xl overflow-hidden shadow-md border border-zinc-200 bg-white p-4 text-center" contenteditable="false">
+          <blockquote class="twitter-tweet" data-dnt="true" data-theme="light">
+            <a href="${trimmed}">Memuat postingan X (Twitter)...</a>
+          </blockquote>
+          <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         </div>
         <p><br></p>
       `;
@@ -456,11 +466,11 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
             </div>
 
             {/* Platform Tabs */}
-            <div className="grid grid-cols-3 gap-2 bg-zinc-100 p-1 rounded-xl">
+            <div className="grid grid-cols-4 gap-2 bg-zinc-100 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setSocialPlatform('youtube')}
-                className={`py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                   socialPlatform === 'youtube'
                     ? 'bg-red-600 text-white shadow-xs'
                     : 'text-zinc-600 hover:text-zinc-900'
@@ -471,7 +481,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
               <button
                 type="button"
                 onClick={() => setSocialPlatform('instagram')}
-                className={`py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                   socialPlatform === 'instagram'
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xs'
                     : 'text-zinc-600 hover:text-zinc-900'
@@ -481,8 +491,19 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
               </button>
               <button
                 type="button"
+                onClick={() => setSocialPlatform('twitter')}
+                className={`py-2 px-2.5 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                  socialPlatform === 'twitter'
+                    ? 'bg-zinc-900 text-white shadow-xs'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                }`}
+              >
+                <span>X / Twitter</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setSocialPlatform('facebook')}
-                className={`py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                   socialPlatform === 'facebook'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-zinc-600 hover:text-zinc-900'
@@ -495,7 +516,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
             {/* Input URL Form */}
             <div className="space-y-2">
               <label className="text-xs font-extrabold uppercase tracking-wider text-zinc-700 block">
-                URL Tautan {socialPlatform === 'youtube' ? 'YouTube' : socialPlatform === 'instagram' ? 'Instagram' : 'Facebook'} *
+                URL Tautan {socialPlatform === 'youtube' ? 'YouTube' : socialPlatform === 'instagram' ? 'Instagram' : socialPlatform === 'twitter' ? 'X (Twitter)' : 'Facebook'} *
               </label>
               <input
                 type="url"
@@ -505,7 +526,9 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
                     ? 'Contoh: https://www.youtube.com/watch?v=...'
                     : socialPlatform === 'instagram'
                     ? 'Contoh: https://www.instagram.com/p/... atau https://www.instagram.com/reel/...'
-                    : 'Contoh: https://www.facebook.com/permalink.php?story_fbid=...'
+                    : socialPlatform === 'twitter'
+                    ? 'Contoh: https://x.com/username/status/...'
+                    : 'Contoh: https://www.facebook.com/.../posts/...'
                 }
                 value={socialUrl}
                 onChange={(e) => setSocialUrl(e.target.value)}

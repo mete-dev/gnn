@@ -1902,10 +1902,13 @@ $categoriesList = array_keys($navbarCategories);
                     </div>
                   </div>
 
-                  <!-- URL Input (Synchronized) -->
-                  <div>
-                    <label class="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">URL Cover Gambar</label>
-                    <input type="url" name="image" id="artImageInput" required value="<?= htmlspecialchars($editArticle['image'] ?? 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80') ?>" placeholder="https://images.unsplash.com/..." class="w-full px-3.5 py-2 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none bg-white font-mono" oninput="updateCoverPreview()">
+                  <!-- Hidden Image Value (Synchronized with File Upload & Gallery) -->
+                  <input type="hidden" name="image" id="artImageInput" required value="<?= htmlspecialchars($editArticle['image'] ?? 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80') ?>">
+
+                  <!-- Cover Compression Status Indicator -->
+                  <div id="coverCompressNotice" class="hidden px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="coverCompressNoticeText">Foto cover berhasil dikompresi optimal (&le; 60 KB).</span>
                   </div>
 
                   <!-- Cover Preview Box -->
@@ -2177,9 +2180,130 @@ $categoriesList = array_keys($navbarCategories);
                   <button type="button" onclick="applyCropSetting()" class="px-5 py-2 bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full">Terapkan Pengaturan</button>
                 </div>
               </div>
+            <!-- MODAL: SISIPKAN FOTO KE DALAM ARTIKEL (UNGGAH DENGAN KOMPRESI <= 60KB) -->
+            <div id="modalInsertArticlePhoto" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+              <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-red-50 text-[#CC0000] flex items-center justify-center font-bold">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                      <h3 class="font-extrabold text-sm sm:text-base text-zinc-900 leading-tight">Sisipkan Foto ke Dalam Naskah</h3>
+                      <p class="text-[11px] text-zinc-500">Foto otomatis dikompresi optimal (&le; 60 KB)</p>
+                    </div>
+                  </div>
+                  <button type="button" onclick="closeInsertPhotoModal()" class="w-7 h-7 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 text-xl font-bold flex items-center justify-center">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Area Unggah / Drop -->
+                  <div onclick="document.getElementById('fileUploadArticleInline').click()" class="border-2 border-dashed border-zinc-300 hover:border-[#CC0000] rounded-2xl p-5 text-center cursor-pointer bg-zinc-50/70 hover:bg-red-50/20 transition group">
+                    <input type="file" id="fileUploadArticleInline" accept="image/*" class="hidden" onchange="handleArticleImageSelected(this)">
+                    <div class="flex flex-col items-center justify-center gap-1.5">
+                      <div class="w-10 h-10 rounded-full bg-white shadow-2xs border border-zinc-200 group-hover:border-red-300 flex items-center justify-center text-zinc-600 group-hover:text-[#CC0000] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                      </div>
+                      <span class="text-xs font-bold text-zinc-800">Klik untuk Pilih &amp; Unggah Foto</span>
+                      <span class="text-[10px] text-zinc-400">Format JPG, PNG, atau WebP (Maks 10MB, otomatis dikompresi &le; 60 KB)</span>
+                    </div>
+                  </div>
+
+                  <!-- Preview Area (Hidden sampai foto dipilih) -->
+                  <div id="inlinePhotoPreviewContainer" class="hidden space-y-2">
+                    <div class="aspect-video w-full rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 relative shadow-2xs">
+                      <img id="inlinePhotoPreviewImg" src="" alt="Pratinjau Foto" class="w-full h-full object-cover">
+                      <span id="inlinePhotoSizeBadge" class="absolute bottom-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-0.5 rounded-full"></span>
+                    </div>
+                  </div>
+
+                  <!-- Keterangan / Caption Foto -->
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1">
+                      Keterangan / Caption Foto <span class="text-zinc-400 font-normal lowercase">(Opsional)</span>
+                    </label>
+                    <input type="text" id="inlinePhotoCaption" placeholder="Contoh: Suasana peluncuran program di Surabaya..." class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none">
+                  </div>
+                </div>
+
+                <div class="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
+                  <button type="button" onclick="closeInsertPhotoModal()" class="px-4 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800">Batal</button>
+                  <button type="button" id="btnConfirmInsertPhoto" onclick="confirmInsertArticlePhoto()" disabled class="px-5 py-2.5 bg-[#CC0000] hover:bg-red-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                    Sisipkan ke Naskah
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <!-- SCRIPTS FOR WYSIWYG & PHOTO HANDLER -->
+            <!-- MODAL: SISIPKAN MEDIA SOSIAL DENGAN PREVIEW (FACEBOOK, INSTAGRAM, X / TWITTER, YOUTUBE) -->
+            <div id="modalSocialEmbed" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+              <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    </div>
+                    <div>
+                      <h3 class="font-extrabold text-sm sm:text-base text-zinc-900 leading-tight">Sisipkan Media Sosial di Naskah</h3>
+                      <p class="text-[11px] text-zinc-500">Mendukung Facebook, Instagram, X (Twitter), dan YouTube dengan pratinjau langsung</p>
+                    </div>
+                  </div>
+                  <button type="button" onclick="closeSocialEmbedModal()" class="w-7 h-7 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 text-xl font-bold flex items-center justify-center">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Platform Tabs -->
+                  <div class="grid grid-cols-4 gap-1.5 p-1 bg-zinc-100 rounded-2xl">
+                    <button type="button" onclick="setSocialPlatform('youtube')" id="tabSocialYoutube" class="py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 bg-red-600 text-white shadow-xs">
+                      <span>YouTube</span>
+                    </button>
+                    <button type="button" onclick="setSocialPlatform('instagram')" id="tabSocialInstagram" class="py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 text-zinc-600 hover:text-zinc-900">
+                      <span>Instagram</span>
+                    </button>
+                    <button type="button" onclick="setSocialPlatform('twitter')" id="tabSocialTwitter" class="py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 text-zinc-600 hover:text-zinc-900">
+                      <span>X (Twitter)</span>
+                    </button>
+                    <button type="button" onclick="setSocialPlatform('facebook')" id="tabSocialFacebook" class="py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 text-zinc-600 hover:text-zinc-900">
+                      <span>Facebook</span>
+                    </button>
+                  </div>
+
+                  <!-- Input URL -->
+                  <div>
+                    <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-1" id="socialUrlLabel">
+                      URL Video YouTube
+                    </label>
+                    <div class="flex gap-2">
+                      <input type="url" id="socialEmbedUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:border-[#CC0000] outline-none font-mono" oninput="handleSocialUrlInput(this.value)">
+                      <button type="button" onclick="generateSocialPreview()" class="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs rounded-xl transition shrink-0">
+                        Pratinjau
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Live Interactive Preview Box -->
+                  <div class="border border-zinc-200 rounded-2xl p-3 bg-zinc-50/70 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Pratinjau Tampilan di Tengah Paragraf
+                      </span>
+                    </div>
+
+                    <div id="socialPreviewArea" class="min-h-[160px] max-h-[340px] overflow-y-auto rounded-xl bg-white border border-zinc-200 flex items-center justify-center p-3 text-xs text-zinc-400">
+                      Masukkan URL di atas dan klik "Pratinjau" untuk melihat tampilan embed media sosial.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
+                  <button type="button" onclick="closeSocialEmbedModal()" class="px-4 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800">Batal</button>
+                  <button type="button" id="btnConfirmSocialEmbed" onclick="confirmInsertSocialEmbed()" disabled class="px-5 py-2.5 bg-[#CC0000] hover:bg-red-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                    Sisipkan ke Tengah Paragraf
+                  </button>
+                </div>
+              </div>
+            </div>
             <script>
               const navbarCategoryData = <?= json_encode($navbarCategories) ?>;
               const currentCategoryVal = '<?= htmlspecialchars($editArticle['category'] ?? 'Ekonomi') ?>';
@@ -2261,51 +2385,352 @@ $categoriesList = array_keys($navbarCategories);
                 }
               }
 
+              // Utility: Kompres gambar ke format WebP/JPEG di bawah 60 KB dengan Canvas agar tetap jernih & tajam
+              function compressImageToUnder60KB(fileOrDataUrl, maxKb = 60) {
+                return new Promise((resolve, reject) => {
+                  const img = new Image();
+                  img.crossOrigin = 'anonymous';
+
+                  img.onload = () => {
+                    let width = img.naturalWidth || img.width;
+                    let height = img.naturalHeight || img.height;
+
+                    // Batas resolusi maksimal lanskap artikel agar tetap proporsional
+                    const MAX_DIM = 1200;
+                    if (width > MAX_DIM || height > MAX_DIM) {
+                      if (width > height) {
+                        height = Math.round((height * MAX_DIM) / width);
+                        width = MAX_DIM;
+                      } else {
+                        width = Math.round((width * MAX_DIM) / height);
+                        height = MAX_DIM;
+                      }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                      resolve({ dataUrl: typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '', sizeKb: 60 });
+                      return;
+                    }
+
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+
+                    let currentWidth = width;
+                    let currentHeight = height;
+                    let quality = 0.88;
+                    let resultDataUrl = '';
+                    let currentSizeKb = Infinity;
+                    let attempts = 0;
+
+                    while (currentSizeKb > maxKb && attempts < 15) {
+                      attempts++;
+                      canvas.width = currentWidth;
+                      canvas.height = currentHeight;
+                      ctx.clearRect(0, 0, currentWidth, currentHeight);
+                      ctx.drawImage(img, 0, 0, currentWidth, currentHeight);
+
+                      // WebP didukung hampir seluruh browser modern dan menghasilkan kompresi sangat jernih
+                      resultDataUrl = canvas.toDataURL('image/webp', quality);
+                      if (!resultDataUrl.startsWith('data:image/webp')) {
+                        resultDataUrl = canvas.toDataURL('image/jpeg', quality);
+                      }
+
+                      currentSizeKb = Math.round((resultDataUrl.length * 0.75) / 1024);
+                      if (currentSizeKb <= maxKb) break;
+
+                      if (quality > 0.45) {
+                        quality -= 0.08;
+                      } else {
+                        currentWidth = Math.round(currentWidth * 0.88);
+                        currentHeight = Math.round(currentHeight * 0.88);
+                      }
+                    }
+
+                    resolve({
+                      dataUrl: resultDataUrl,
+                      sizeKb: currentSizeKb,
+                      width: currentWidth,
+                      height: currentHeight
+                    });
+                  };
+
+                  img.onerror = (err) => reject(err);
+
+                  if (fileOrDataUrl instanceof File) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => { img.src = e.target.result; };
+                    reader.onerror = (err) => reject(err);
+                    reader.readAsDataURL(fileOrDataUrl);
+                  } else {
+                    img.src = fileOrDataUrl;
+                  }
+                });
+              }
+
+              // Simpan posisi kursor editor teks sebelum membuka modal
+              let savedEditorRange = null;
+              function saveEditorSelection() {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0) {
+                  savedEditorRange = sel.getRangeAt(0).cloneRange();
+                }
+              }
+
+              function restoreEditorSelection() {
+                if (savedEditorRange) {
+                  const sel = window.getSelection();
+                  if (sel) {
+                    sel.removeAllRanges();
+                    sel.addRange(savedEditorRange);
+                  }
+                  savedEditorRange = null;
+                }
+              }
+
+              // MODAL: Sisipkan Foto ke Dalam Naskah (Inline Photo)
+              let currentInlineCompressedDataUrl = null;
+
               function insertArticleImage() {
-                const url = prompt('Masukkan URL Gambar / Foto yang ingin disisipkan:', 'https://images.unsplash.com/');
-                if (url) {
-                  const caption = prompt('Keterangan foto (opsional):', '');
-                  const imgHtml = `<figure class="my-4"><img src="${url}" alt="${caption}" class="w-full rounded-2xl border border-zinc-200" /><figcaption class="text-xs text-zinc-500 mt-1 italic text-center">${caption || ''}</figcaption></figure><p></p>`;
-                  document.getElementById('editorContent').focus();
-                  document.execCommand('insertHTML', false, imgHtml);
-                  syncEditorToTextarea();
-                }
+                saveEditorSelection();
+                currentInlineCompressedDataUrl = null;
+                document.getElementById('fileUploadArticleInline').value = '';
+                document.getElementById('inlinePhotoPreviewContainer').classList.add('hidden');
+                document.getElementById('inlinePhotoCaption').value = '';
+                document.getElementById('btnConfirmInsertPhoto').disabled = true;
+                document.getElementById('modalInsertArticlePhoto').classList.remove('hidden');
               }
 
-              function insertSocialEmbed() {
-                const url = prompt('Masukkan URL media sosial atau YouTube:', 'https://www.youtube.com/watch?v=');
-                if (url) {
-                  const embedHtml = `<div class="p-4 my-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs"><a href="${url}" target="_blank" class="font-bold text-[#CC0000] underline flex items-center gap-1.5">🔗 Lihat Postingan Terkait (${url})</a></div><p></p>`;
-                  document.getElementById('editorContent').focus();
-                  document.execCommand('insertHTML', false, embedHtml);
-                  syncEditorToTextarea();
-                }
+              function closeInsertPhotoModal() {
+                document.getElementById('modalInsertArticlePhoto').classList.add('hidden');
               }
 
-              function toggleBulletsHelper() {
-                const container = document.getElementById('bulletsContainer');
-                container.classList.toggle('hidden');
-              }
-
-              // Cover image previews
-              function updateCoverPreview() {
-                const val = document.getElementById('artImageInput').value.trim();
-                const preview = document.getElementById('coverPreviewImg');
-                if (val && preview) {
-                  preview.src = val;
-                }
-              }
-
-              function handleCoverFileUpload(input) {
+              async function handleArticleImageSelected(input) {
                 if (input.files && input.files[0]) {
                   const file = input.files[0];
-                  const reader = new FileReader();
-                  reader.onload = function(e) {
-                    const dataUrl = e.target.result;
-                    document.getElementById('artImageInput').value = dataUrl;
-                    document.getElementById('coverPreviewImg').src = dataUrl;
-                  };
-                  reader.readAsDataURL(file);
+                  try {
+                    const btn = document.getElementById('btnConfirmInsertPhoto');
+                    btn.disabled = true;
+                    btn.textContent = 'Mengompresi...';
+
+                    const res = await compressImageToUnder60KB(file, 60);
+                    currentInlineCompressedDataUrl = res.dataUrl;
+
+                    const previewImg = document.getElementById('inlinePhotoPreviewImg');
+                    previewImg.src = res.dataUrl;
+
+                    const badge = document.getElementById('inlinePhotoSizeBadge');
+                    badge.textContent = `Tersimpan: ${res.sizeKb} KB (Jernih)`;
+
+                    document.getElementById('inlinePhotoPreviewContainer').classList.remove('hidden');
+
+                    const fileNameClean = file.name.replace(/\.[^/.]+$/, '');
+                    if (!document.getElementById('inlinePhotoCaption').value) {
+                      document.getElementById('inlinePhotoCaption').value = fileNameClean;
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = 'Sisipkan ke Naskah';
+                  } catch (err) {
+                    alert('Gagal memproses gambar: ' + err.message);
+                  }
+                }
+              }
+
+              function confirmInsertArticlePhoto() {
+                if (!currentInlineCompressedDataUrl) return;
+                const caption = document.getElementById('inlinePhotoCaption').value.trim();
+                const figHtml = `<figure class="my-5 text-center" contenteditable="false"><img src="${currentInlineCompressedDataUrl}" alt="${caption}" class="w-full rounded-2xl border border-zinc-200 shadow-sm max-h-[520px] object-cover mx-auto" /><figcaption class="text-xs text-zinc-500 mt-1.5 italic text-center font-medium">${caption}</figcaption></figure><p><br></p>`;
+
+                closeInsertPhotoModal();
+                document.getElementById('editorContent').focus();
+                restoreEditorSelection();
+                document.execCommand('insertHTML', false, figHtml);
+                syncEditorToTextarea();
+              }
+
+              // MODAL: Sisipkan Media Sosial dengan Live Preview (YouTube, Instagram, Twitter/X, Facebook)
+              let activeSocialPlatform = 'youtube';
+              let currentSocialEmbedCode = '';
+
+              function insertSocialEmbed() {
+                saveEditorSelection();
+                document.getElementById('socialEmbedUrlInput').value = '';
+                document.getElementById('socialPreviewArea').innerHTML = 'Masukkan URL di atas dan klik "Pratinjau" untuk melihat tampilan embed media sosial.';
+                document.getElementById('btnConfirmSocialEmbed').disabled = true;
+                setSocialPlatform('youtube');
+                document.getElementById('modalSocialEmbed').classList.remove('hidden');
+              }
+
+              function closeSocialEmbedModal() {
+                document.getElementById('modalSocialEmbed').classList.add('hidden');
+              }
+
+              function setSocialPlatform(platform) {
+                activeSocialPlatform = platform;
+                const platforms = ['youtube', 'instagram', 'twitter', 'facebook'];
+                platforms.forEach(p => {
+                  const tab = document.getElementById('tabSocial' + p.charAt(0).toUpperCase() + p.slice(1));
+                  if (tab) {
+                    if (p === platform) {
+                      if (p === 'youtube') tab.className = 'py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 bg-red-600 text-white shadow-xs';
+                      else if (p === 'instagram') tab.className = 'py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xs';
+                      else if (p === 'twitter') tab.className = 'py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 bg-zinc-900 text-white shadow-xs';
+                      else if (p === 'facebook') tab.className = 'py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs';
+                    } else {
+                      tab.className = 'py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 text-zinc-600 hover:text-zinc-900';
+                    }
+                  }
+                });
+
+                const label = document.getElementById('socialUrlLabel');
+                const input = document.getElementById('socialEmbedUrlInput');
+                if (platform === 'youtube') {
+                  label.textContent = 'URL Video YouTube';
+                  input.placeholder = 'Contoh: https://www.youtube.com/watch?v=... atau https://youtu.be/...';
+                } else if (platform === 'instagram') {
+                  label.textContent = 'URL Postingan / Reel Instagram';
+                  input.placeholder = 'Contoh: https://www.instagram.com/p/... atau https://www.instagram.com/reel/...';
+                } else if (platform === 'twitter') {
+                  label.textContent = 'URL Postingan X (Twitter)';
+                  input.placeholder = 'Contoh: https://x.com/username/status/...';
+                } else if (platform === 'facebook') {
+                  label.textContent = 'URL Postingan Facebook';
+                  input.placeholder = 'Contoh: https://www.facebook.com/.../posts/...';
+                }
+
+                if (input.value.trim()) {
+                  generateSocialPreview();
+                }
+              }
+
+              function handleSocialUrlInput(val) {
+                const trimmed = val.trim();
+                // Auto detect platform based on URL
+                if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
+                  if (activeSocialPlatform !== 'youtube') setSocialPlatform('youtube');
+                } else if (trimmed.includes('instagram.com')) {
+                  if (activeSocialPlatform !== 'instagram') setSocialPlatform('instagram');
+                } else if (trimmed.includes('twitter.com') || trimmed.includes('x.com')) {
+                  if (activeSocialPlatform !== 'twitter') setSocialPlatform('twitter');
+                } else if (trimmed.includes('facebook.com') || trimmed.includes('fb.watch')) {
+                  if (activeSocialPlatform !== 'facebook') setSocialPlatform('facebook');
+                }
+              }
+
+              function generateSocialPreview() {
+                const url = document.getElementById('socialEmbedUrlInput').value.trim();
+                const previewArea = document.getElementById('socialPreviewArea');
+                const btnConfirm = document.getElementById('btnConfirmSocialEmbed');
+
+                if (!url) {
+                  previewArea.innerHTML = '<span class="text-zinc-400">Harap masukkan URL terlebih dahulu.</span>';
+                  btnConfirm.disabled = true;
+                  return;
+                }
+
+                currentSocialEmbedCode = '';
+
+                if (activeSocialPlatform === 'youtube') {
+                  const match = url.match(/(?:v=|\/embed\/|\/watch\?v=|&v=|\/v\/|youtu\.be\/|\/shorts\/)([^#&?]*)/);
+                  const videoId = (match && match[1]) ? match[1] : '';
+                  if (!videoId) {
+                    previewArea.innerHTML = '<span class="text-red-500 font-semibold">⚠️ Format URL YouTube tidak valid. Gunakan link video standar atau share link.</span>';
+                    btnConfirm.disabled = true;
+                    return;
+                  }
+                  currentSocialEmbedCode = `
+                    <div class="embed-social embed-youtube my-5 relative rounded-2xl overflow-hidden shadow-md bg-black border border-zinc-200" contenteditable="false">
+                      <div class="aspect-video w-full">
+                        <iframe src="https://www.youtube-nocookie.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full rounded-2xl"></iframe>
+                      </div>
+                    </div>
+                  `;
+                  previewArea.innerHTML = currentSocialEmbedCode;
+                  btnConfirm.disabled = false;
+                } else if (activeSocialPlatform === 'instagram') {
+                  const match = url.match(/(?:p|reel|tv)\/([^/?#]+)/);
+                  const postId = (match && match[1]) ? match[1] : '';
+                  const embedSrc = postId ? `https://www.instagram.com/p/${postId}/embed` : url;
+                  currentSocialEmbedCode = `
+                    <div class="embed-social embed-instagram my-5 max-w-md mx-auto rounded-2xl overflow-hidden shadow-md border border-zinc-200 bg-white p-2" contenteditable="false">
+                      <iframe src="${embedSrc}" width="100%" height="480" frameborder="0" scrolling="no" allowtransparency="true" class="w-full h-[480px] rounded-xl"></iframe>
+                    </div>
+                  `;
+                  previewArea.innerHTML = currentSocialEmbedCode;
+                  btnConfirm.disabled = false;
+                } else if (activeSocialPlatform === 'twitter') {
+                  // X / Twitter interactive embed widget
+                  currentSocialEmbedCode = `
+                    <div class="embed-social embed-twitter my-5 max-w-lg mx-auto rounded-2xl overflow-hidden shadow-md border border-zinc-200 bg-white p-4 text-center" contenteditable="false">
+                      <blockquote class="twitter-tweet" data-dnt="true" data-theme="light">
+                        <a href="${url}">Memuat postingan X / Twitter...</a>
+                      </blockquote>
+                      <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"><\/script>
+                    </div>
+                  `;
+                  previewArea.innerHTML = `
+                    <div class="p-4 bg-zinc-900 text-white rounded-xl text-left w-full space-y-2">
+                      <div class="flex items-center gap-2 text-xs font-bold text-zinc-300">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        <span>Postingan X (Twitter) Terverifikasi</span>
+                      </div>
+                      <p class="text-xs text-zinc-200 truncate font-mono">${url}</p>
+                      <p class="text-[11px] text-zinc-400">Postingan ini akan otomatis dirender sebagai embed interaktif resmi di tengah naskah artikel.</p>
+                    </div>
+                  `;
+                  btnConfirm.disabled = false;
+                } else if (activeSocialPlatform === 'facebook') {
+                  const encodedUrl = encodeURIComponent(url);
+                  currentSocialEmbedCode = `
+                    <div class="embed-social embed-facebook my-5 max-w-lg mx-auto rounded-2xl overflow-hidden shadow-md border border-zinc-200 bg-white p-2" contenteditable="false">
+                      <iframe src="https://www.facebook.com/plugins/post.php?href=${encodedUrl}&show_text=true&width=500" width="100%" height="420" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" class="w-full h-[420px] rounded-xl"></iframe>
+                    </div>
+                  `;
+                  previewArea.innerHTML = currentSocialEmbedCode;
+                  btnConfirm.disabled = false;
+                }
+              }
+
+              function confirmInsertSocialEmbed() {
+                if (!currentSocialEmbedCode) return;
+                const embedWithSpacing = `${currentSocialEmbedCode}<p><br></p>`;
+                closeSocialEmbedModal();
+                document.getElementById('editorContent').focus();
+                restoreEditorSelection();
+                document.execCommand('insertHTML', false, embedWithSpacing);
+                syncEditorToTextarea();
+              }
+
+              // File Upload Cover Photo dengan kompresi <= 60 KB
+              async function handleCoverFileUpload(input) {
+                if (input.files && input.files[0]) {
+                  const file = input.files[0];
+                  try {
+                    const notice = document.getElementById('coverCompressNotice');
+                    const noticeText = document.getElementById('coverCompressNoticeText');
+                    if (notice) {
+                      notice.classList.remove('hidden');
+                      noticeText.textContent = 'Sedang mengompresi gambar cover...';
+                    }
+
+                    const res = await compressImageToUnder60KB(file, 60);
+
+                    document.getElementById('artImageInput').value = res.dataUrl;
+                    document.getElementById('coverPreviewImg').src = res.dataUrl;
+
+                    if (notice) {
+                      noticeText.textContent = `✓ Foto cover berhasil dikompresi: ${res.sizeKb} KB (Jernih & Tajam).`;
+                    }
+
+                    const fileNameClean = file.name.replace(/\.[^/.]+$/, '');
+                    if (!document.getElementById('inputCaption').value) {
+                      document.getElementById('inputCaption').value = fileNameClean;
+                    }
+                  } catch (err) {
+                    alert('Gagal mengompresi foto cover: ' + err.message);
+                  }
                 }
               }
 
@@ -2321,6 +2746,14 @@ $categoriesList = array_keys($navbarCategories);
                 document.getElementById('coverPreviewImg').src = url;
                 if (caption) document.getElementById('inputCaption').value = caption;
                 if (credit) document.getElementById('inputImageCredit').value = credit;
+
+                const notice = document.getElementById('coverCompressNotice');
+                const noticeText = document.getElementById('coverCompressNoticeText');
+                if (notice) {
+                  notice.classList.remove('hidden');
+                  noticeText.textContent = '✓ Foto terpilih dari Galeri Foto Redaksi.';
+                }
+
                 closeGalleryPickerModal();
               }
 
