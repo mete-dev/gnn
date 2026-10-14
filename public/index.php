@@ -1154,11 +1154,6 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
               
               <!-- Captured Target Container -->
               <div id="renderCanvasTarget" class="w-full overflow-hidden flex flex-col bg-black text-white relative shadow-2xl select-none" style="font-family: 'Plus Jakarta Sans', sans-serif; aspect-ratio: 9 / 16; min-height: 568px; position: relative;">
-                
-                <!-- Top Vignette Gradient -->
-                <div class="absolute top-0 inset-x-0 h-28 pointer-events-none z-20"
-                     style="background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 60%, transparent 100%);">
-                </div>
 
                 <!-- Left: Logo Resmi GNN (Full 0px ke bagian atas frame) -->
                 <div class="absolute top-0 left-5 z-30 select-none">
@@ -1180,15 +1175,22 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                   <div id="canvasImageFull" class="absolute inset-0 w-full h-full z-0"
                        style="background-image: url('<?= htmlspecialchars($initialImage) ?>'); background-size: cover; background-position: center center; background-repeat: no-repeat;">
                   </div>
+
+                  <!-- Top Vignette Overlay covering the canvas (NO 1/3 horizontal seam line!) -->
+                  <div class="absolute inset-0 pointer-events-none z-10"
+                       style="background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 20%, transparent 40%);">
+                  </div>
                   
                   <!-- Bottom Overlay with Rich Smooth Gradient & Safe Bottom Padding -->
-                  <div class="absolute inset-x-0 bottom-0 flex flex-col justify-end text-left z-10"
+                  <div class="absolute inset-x-0 bottom-0 flex flex-col justify-end text-left z-20"
                        style="background: linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.45) 75%, transparent 100%); padding-top: 100px; padding-bottom: 30px; padding-left: 24px; padding-right: 24px;">
 
                     <!-- Headline Title with Roboto Serif -->
-                    <h2 id="canvasTextFull" class="font-serif font-extrabold text-white tracking-tight leading-snug drop-shadow-lg text-xl sm:text-2xl mb-4 text-left" style="font-family: 'Roboto Serif', Georgia, serif; line-height: 1.35;">
-                      <?= htmlspecialchars($initialTitle) ?>
-                    </h2>
+                    <div class="w-full overflow-visible mb-4">
+                      <h2 id="canvasTextFull" class="font-serif font-extrabold text-white tracking-tight leading-normal drop-shadow-lg text-xl sm:text-2xl text-left" style="font-family: 'Roboto Serif', Georgia, serif; line-height: 1.4; padding-bottom: 6px; display: block; overflow: visible;">
+                        <?= htmlspecialchars($initialTitle) ?>
+                      </h2>
+                    </div>
 
                     <!-- Footer Meta Bar (Small clean domain and photo credit) -->
                     <div class="pt-3 border-t border-white/20 flex items-center justify-between text-[9px] text-zinc-300" style="line-height: 1.5;">
@@ -1206,17 +1208,21 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
                 <!-- CONTENT AREA: MODEL 2 (SPLIT CARD) -->
                 <div id="canvasLayoutSplit" class="absolute inset-0 w-full h-full hidden flex-col">
-                  <!-- Image top (58%) with True Aspect Ratio Cover -->
-                  <div class="relative w-full h-[58%] overflow-hidden bg-zinc-900 shrink-0">
+                  <!-- Image top (52%) with True Aspect Ratio Cover -->
+                  <div class="relative w-full h-[52%] overflow-hidden bg-zinc-900 shrink-0">
                     <div id="canvasImageSplit" class="w-full h-full"
                          style="background-image: url('<?= htmlspecialchars($initialImage) ?>'); background-size: cover; background-position: center center; background-repeat: no-repeat;">
                     </div>
+                    <!-- Top Vignette Overlay covering the ENTIRE top image (NO 1/3 horizontal seam line!) -->
+                    <div class="absolute inset-0 pointer-events-none z-10"
+                         style="background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 25%, transparent 50%);">
+                    </div>
                   </div>
-                  <!-- Content card bottom (42%) -->
-                  <div class="relative w-full h-[42%] bg-[#0a0a0a] flex flex-col justify-between z-10 overflow-hidden text-left"
-                       style="padding-top: 20px; padding-bottom: 30px; padding-left: 24px; padding-right: 24px;">
-                    <div>
-                      <h2 id="canvasTextSplit" class="font-serif font-extrabold text-white tracking-tight leading-snug drop-shadow-md text-base sm:text-lg line-clamp-4" style="font-family: 'Roboto Serif', Georgia, serif; line-height: 1.35;">
+                  <!-- Content card bottom (48%) with generous space and no text clipping -->
+                  <div class="relative w-full h-[48%] bg-[#0a0a0a] flex flex-col justify-between z-10 text-left"
+                       style="padding-top: 22px; padding-bottom: 24px; padding-left: 24px; padding-right: 24px;">
+                    <div class="w-full overflow-visible">
+                      <h2 id="canvasTextSplit" class="font-serif font-extrabold text-white tracking-tight leading-normal drop-shadow-md text-base sm:text-lg" style="font-family: 'Roboto Serif', Georgia, serif; line-height: 1.45; padding-bottom: 8px; display: block; overflow: visible;">
                         <?= htmlspecialchars($initialTitle) ?>
                       </h2>
                     </div>
@@ -1305,7 +1311,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
           fullText.className = 'font-extrabold text-white tracking-tight leading-snug mb-4 text-left drop-shadow-lg ' +
             (size === 'sm' ? 'text-lg sm:text-xl' : size === 'lg' ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl');
 
-          splitText.className = 'font-extrabold text-white tracking-tight leading-snug drop-shadow-md text-left line-clamp-4 ' +
+          splitText.className = 'font-extrabold text-white tracking-tight leading-normal drop-shadow-md text-left ' +
             (size === 'sm' ? 'text-sm sm:text-base' : size === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg');
 
           ['sm', 'md', 'lg'].forEach(s => {
@@ -1319,7 +1325,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
           });
         }
 
-        function downloadRenderPNG() {
+        async function downloadRenderPNG() {
           const btn = document.getElementById('btnDownloadRender');
           const btnText = document.getElementById('btnDownloadText');
           const target = document.getElementById('renderCanvasTarget');
@@ -1327,14 +1333,21 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
           btn.disabled = true;
           btnText.textContent = 'Memproses Render Gambar...';
 
+          if (document.fonts && document.fonts.ready) {
+            try {
+              await document.fonts.ready;
+            } catch (e) {}
+          }
+
           html2canvas(target, {
-            scale: 2.5,
+            scale: 3,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#000000',
             logging: false,
             scrollX: 0,
-            scrollY: 0
+            scrollY: 0,
+            imageTimeout: 15000
           }).then(canvas => {
             const link = document.createElement('a');
             link.download = 'GNN-Desain-' + Date.now() + '.png';
