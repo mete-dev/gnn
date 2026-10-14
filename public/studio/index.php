@@ -1576,15 +1576,26 @@ $categoriesList = array_keys($navbarCategories);
                 <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#CC0000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <?php endif; ?>
             </div>
-            <h1 class="text-sm sm:text-lg font-extrabold text-zinc-900 tracking-tight truncate">
-              <?php
-                if ($tab === 'write') echo $editArticle ? 'Edit Artikel' : 'Tulis Artikel';
-                elseif ($tab === 'gallery') echo 'Galeri Foto';
-                elseif ($tab === 'videos') echo 'Video GNN TV';
-                elseif ($tab === 'users') echo 'Kelola Tim';
-                elseif ($tab === 'settings') echo 'Pengaturan';
-                else echo 'Kelola Artikel';
-              ?>
+            <h1 class="text-sm sm:text-lg font-extrabold text-zinc-900 tracking-tight truncate flex items-center gap-2">
+              <span>
+                <?php
+                  if ($tab === 'write') echo $editArticle ? 'Edit Artikel' : 'Tulis Artikel';
+                  elseif ($tab === 'gallery') echo 'Galeri Foto';
+                  elseif ($tab === 'videos') echo 'Video GNN TV';
+                  elseif ($tab === 'users') echo 'Kelola Tim';
+                  elseif ($tab === 'settings') echo 'Pengaturan';
+                  else echo 'Kelola Artikel';
+                ?>
+              </span>
+              <?php if ($tab === 'gallery'): ?>
+                <span class="text-xs font-bold text-zinc-400 font-sans">(<?= count($gallery) ?>)</span>
+              <?php elseif ($tab === 'videos'): ?>
+                <span class="text-xs font-bold text-zinc-400 font-sans">(<?= count($videos) ?>)</span>
+              <?php elseif ($tab === 'users'): ?>
+                <span class="text-xs font-bold text-zinc-400 font-sans">(<?= count($users) ?>)</span>
+              <?php elseif ($tab === 'articles' && !empty($articles)): ?>
+                <span class="text-xs font-bold text-zinc-400 font-sans">(<?= count($articles) ?>)</span>
+              <?php endif; ?>
             </h1>
           </div>
 
@@ -1639,7 +1650,7 @@ $categoriesList = array_keys($navbarCategories);
               </a>
             
             <?php elseif ($tab === 'gallery'): ?>
-              <!-- Search Gallery Pill (Matching media_1791791444421.png) -->
+              <!-- Search Gallery Pill -->
               <form method="GET" action="" class="relative">
                 <input type="hidden" name="tab" value="gallery">
                 <div class="flex items-center bg-white border border-zinc-200 rounded-full px-3.5 py-2 text-xs text-zinc-700 shadow-xs focus-within:border-zinc-400 transition w-44 sm:w-64">
@@ -1651,14 +1662,14 @@ $categoriesList = array_keys($navbarCategories);
                 </div>
               </form>
 
-              <!-- Button: + Unggah Foto (Matching media_1791791444421.png) -->
-              <button onclick="document.getElementById('modalAddGallery').classList.remove('hidden')" class="bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full px-4 sm:px-5 py-2.5 flex items-center gap-1.5 shadow-xs transition shrink-0">
+              <!-- Button: + Tambah Foto (Single Button) -->
+              <button type="button" onclick="document.getElementById('modalAddGallery').classList.remove('hidden')" class="bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full px-4 sm:px-5 py-2.5 flex items-center gap-1.5 shadow-xs transition shrink-0 cursor-pointer">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                <span>Unggah Foto</span>
+                <span>Tambah Foto</span>
               </button>
 
             <?php elseif ($tab === 'videos'): ?>
-              <!-- Search Video Pill (Matching media_1791791458449.png) -->
+              <!-- Search Video Pill -->
               <form method="GET" action="" class="relative">
                 <input type="hidden" name="tab" value="videos">
                 <div class="flex items-center bg-white border border-zinc-200 rounded-full px-3.5 py-2 text-xs text-zinc-700 shadow-xs focus-within:border-zinc-400 transition w-44 sm:w-64">
@@ -1670,8 +1681,8 @@ $categoriesList = array_keys($navbarCategories);
                 </div>
               </form>
 
-              <!-- Button: + Tambah Video (Matching media_1791791458449.png) -->
-              <button onclick="document.getElementById('modalAddVideo').classList.remove('hidden')" class="bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full px-4 sm:px-5 py-2.5 flex items-center gap-1.5 shadow-xs transition shrink-0">
+              <!-- Button: + Tambah Video (Single Button) -->
+              <button type="button" onclick="document.getElementById('modalAddVideo').classList.remove('hidden')" class="bg-[#CC0000] hover:bg-red-700 text-white font-bold text-xs rounded-full px-4 sm:px-5 py-2.5 flex items-center gap-1.5 shadow-xs transition shrink-0 cursor-pointer">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 <span>Tambah Video</span>
               </button>
@@ -2287,17 +2298,7 @@ $categoriesList = array_keys($navbarCategories);
 
           <!-- TAB: GALERI FOTO -->
           <?php elseif ($tab === 'gallery'): ?>
-            <div class="bg-white rounded-3xl border border-zinc-200/80 shadow-xs p-6 sm:p-8 min-h-[480px]">
-              <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100">
-                <div>
-                  <h2 class="font-extrabold text-lg text-zinc-900">Koleksi Galeri Foto (<?= count($gallery) ?>)</h2>
-                  <p class="text-xs text-zinc-500">Koleksi dokumentasi visual dan kekayaan fotografi Nusantara</p>
-                </div>
-                <button onclick="document.getElementById('modalAddGallery').classList.remove('hidden')" class="px-4 py-2 bg-[#CC0000] text-white text-xs font-bold rounded-full hover:bg-red-700 transition">
-                  + Tambah Foto
-                </button>
-              </div>
-
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-6 lg:p-8 min-h-[480px]">
               <?php if (empty($gallery)): ?>
                 <div class="py-16 text-center text-zinc-400">
                   <p class="text-sm">Belum ada foto di galeri.</p>
@@ -2305,16 +2306,16 @@ $categoriesList = array_keys($navbarCategories);
               <?php else: ?>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <?php foreach ($gallery as $gal): ?>
-                    <div class="group relative rounded-2xl overflow-hidden border border-zinc-200 shadow-xs bg-zinc-50 flex flex-col justify-between">
-                      <div class="aspect-4/3 w-full overflow-hidden bg-zinc-100">
+                    <div class="group relative rounded-2xl overflow-hidden border border-zinc-200 shadow-xs bg-white flex flex-col justify-between hover:shadow-md transition">
+                      <div class="w-full overflow-hidden bg-zinc-100 relative aspect-video" style="aspect-ratio: 16/9;">
                         <img src="<?= htmlspecialchars($gal['image_url']) ?>" alt="<?= htmlspecialchars($gal['title']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                       </div>
-                      <div class="p-3 bg-white flex items-center justify-between gap-2">
+                      <div class="p-3 bg-white flex items-center justify-between gap-2 border-t border-zinc-100">
                         <div class="truncate">
                           <div class="font-bold text-xs text-zinc-900 truncate"><?= htmlspecialchars($gal['title']) ?></div>
                           <div class="text-[10px] text-zinc-400"><?= htmlspecialchars($gal['author'] ?: 'Redaksi GNN') ?></div>
                         </div>
-                        <a href="?delete_gal=<?= urlencode($gal['id']) ?>" onclick="return confirm('Hapus foto ini?')" class="p-1 text-zinc-400 hover:text-red-600 transition">
+                        <a href="?delete_gal=<?= urlencode($gal['id']) ?>" onclick="return confirm('Hapus foto ini?')" class="p-1 text-zinc-400 hover:text-red-600 transition shrink-0" title="Hapus foto">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </a>
                       </div>
@@ -2362,17 +2363,7 @@ $categoriesList = array_keys($navbarCategories);
 
           <!-- TAB: VIDEO YOUTUBE -->
           <?php elseif ($tab === 'videos'): ?>
-            <div class="bg-white rounded-3xl border border-zinc-200/80 shadow-xs p-6 sm:p-8 min-h-[480px]">
-              <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100">
-                <div>
-                  <h2 class="font-extrabold text-lg text-zinc-900">Koleksi Video TV & YouTube (<?= count($videos) ?>)</h2>
-                  <p class="text-xs text-zinc-500">Tayangan dokumenter, liputan positif, dan inovasi bangsa</p>
-                </div>
-                <button onclick="document.getElementById('modalAddVideo').classList.remove('hidden')" class="px-4 py-2 bg-[#CC0000] text-white text-xs font-bold rounded-full hover:bg-red-700 transition">
-                  + Tambah Video
-                </button>
-              </div>
-
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-6 lg:p-8 min-h-[480px]">
               <?php if (empty($videos)): ?>
                 <div class="py-16 text-center text-zinc-400">
                   <p class="text-sm">Belum ada video yang ditambahkan.</p>
@@ -2435,14 +2426,7 @@ $categoriesList = array_keys($navbarCategories);
 
           <!-- TAB: PENGGUNA -->
           <?php elseif ($tab === 'users'): ?>
-            <div class="bg-white rounded-3xl border border-zinc-200/80 shadow-xs p-6 sm:p-8 min-h-[480px]">
-              <div class="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100">
-                <div>
-                  <h2 class="font-extrabold text-lg text-zinc-900">Daftar Pengguna Studio (<?= count($users) ?>)</h2>
-                  <p class="text-xs text-zinc-500">Anggota redaksi, wartawan, dan kontributor Good News Nusantara</p>
-                </div>
-              </div>
-
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-6 lg:p-8 min-h-[480px]">
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-zinc-700 whitespace-nowrap">
                   <thead>
