@@ -2098,6 +2098,48 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
               </div>
             </div>
 
+            <!-- SOSIAL (TRENDING SOSIAL - SESUAI FORMAT FOTO 3) -->
+            <div>
+              <div class="flex items-center justify-between mb-5 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#CC0000] inline-block animate-pulse"></span>
+                  <h2 class="font-sans font-black text-xl sm:text-2xl text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Sosial
+                  </h2>
+                </div>
+                <a href="?category=SOSIAL" class="text-xs font-bold text-zinc-400 hover:text-[#CC0000] uppercase tracking-wider transition">
+                  Trending
+                </a>
+              </div>
+
+              <div class="space-y-5">
+                <?php if (!empty($trendingSosial)): ?>
+                  <?php foreach ($trendingSosial as $art): ?>
+                    <div class="flex items-start gap-4 sm:gap-5 pb-5 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0 group">
+                      <a href="/<?= slugify($art['title']) ?>" class="w-32 sm:w-44 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
+                        <img src="<?= htmlspecialchars(getSafeArticleImage($art['image'] ?? '', $art['category'] ?? '')) ?>" alt="<?= htmlspecialchars($art['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                      </a>
+                      <div class="flex-1 min-w-0">
+                        <span class="text-[#CC0000] font-black text-[10px] sm:text-[11px] uppercase tracking-wider block mb-1">
+                          <?= htmlspecialchars($art['sub_category'] ?: $art['category']) ?>
+                        </span>
+                        <h3 class="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 sm:line-clamp-3 mb-1.5">
+                          <a href="/<?= slugify($art['title']) ?>">
+                            <?= htmlspecialchars($art['title']) ?>
+                          </a>
+                        </h3>
+                        <div class="text-[10px] sm:text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                          <?= htmlspecialchars($art['author'] ?: 'Redaksi GNN') ?> • <?= htmlspecialchars($art['date'] ?: date('d M Y', strtotime($art['created_at']))) ?>
+                        </div>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <p class="text-xs text-zinc-400 py-4">Belum ada berita Sosial.</p>
+                <?php endif; ?>
+              </div>
+            </div>
+
             <!-- FOTO 4: OLAHRAGA (MENAMPILKAN DATA DARI SUB KATEGORI OLAHRAGA) -->
             <div class="pt-2">
               <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-100 dark:border-zinc-800">
@@ -2148,16 +2190,21 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
           </div>
 
-          <!-- RIGHT COLUMN (4-5 cols): Widget 🔴 SEJARAH (Matching Foto 3 & Foto 4) -->
-          <div class="lg:col-span-5 xl:col-span-4">
-            <div class="bg-zinc-50/70 dark:bg-zinc-900/50 p-5 sm:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 sticky top-24">
-              
-              <!-- Widget Header: 🔴 SEJARAH -->
-              <div class="flex items-center gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#CC0000] inline-block animate-pulse"></span>
-                <h3 class="font-sans font-black text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 uppercase tracking-widest">
-                  SEJARAH
-                </h3>
+          <!-- RIGHT COLUMN (4-5 cols): 🔴 SEJARAH + 🔴 SAINTEK + 🔴 LIFESTYLE (Filling the right space) -->
+          <div class="lg:col-span-5 xl:col-span-4 space-y-6">
+            
+            <!-- WIDGET 1: 🔴 SEJARAH -->
+            <div class="bg-zinc-50/70 dark:bg-zinc-900/50 p-5 sm:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#CC0000] inline-block animate-pulse"></span>
+                  <h3 class="font-sans font-black text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 uppercase tracking-widest">
+                    SEJARAH
+                  </h3>
+                </div>
+                <a href="?category=SEJARAH" class="text-xs font-bold text-zinc-400 hover:text-[#CC0000] uppercase tracking-wider transition">
+                  Indeks
+                </a>
               </div>
 
               <!-- Top Featured Sejarah Card with Cover Image -->
@@ -2179,7 +2226,7 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
 
                 <!-- Followed by Headline Text Links -->
                 <div class="space-y-4">
-                  <?php foreach (array_slice($sejarahArticles, 1, 6) as $sArt): ?>
+                  <?php foreach (array_slice($sejarahArticles, 1, 4) as $sArt): ?>
                     <div class="pb-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 group">
                       <h4 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-3 mb-1">
                         <a href="/<?= slugify($sArt['title']) ?>">
@@ -2193,49 +2240,38 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                   <?php endforeach; ?>
                 </div>
               <?php endif; ?>
-
             </div>
-          </div>
 
-        </section>
-
-        <!-- ============================================================== -->
-        <!-- TRENDING 3 BERITA: SAINTEK, SOSIAL, LIFESTYLE (FOTO 3 STYLE) -->
-        <!-- ============================================================== -->
-        <section class="border-t border-zinc-200/80 dark:border-zinc-800/80 pt-8 pb-12">
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
-            
-            <!-- KOLOM 1: SAINTEK TRENDING -->
-            <div>
-              <div class="flex items-center justify-between mb-5 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+            <!-- WIDGET 2: 🔴 SAINTEK (TRENDING) -->
+            <div class="bg-zinc-50/70 dark:bg-zinc-900/50 p-5 sm:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#CC0000] inline-block animate-pulse"></span>
-                  <h2 class="font-sans font-black text-xl sm:text-2xl text-zinc-900 dark:text-zinc-100 tracking-tight">
-                    Saintek
-                  </h2>
+                  <h3 class="font-sans font-black text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 uppercase tracking-widest">
+                    SAINTEK
+                  </h3>
                 </div>
                 <a href="?category=SAINTEK" class="text-xs font-bold text-zinc-400 hover:text-[#CC0000] uppercase tracking-wider transition">
                   Trending
                 </a>
               </div>
 
-              <div class="space-y-5">
+              <div class="space-y-4">
                 <?php if (!empty($trendingSaintek)): ?>
                   <?php foreach ($trendingSaintek as $art): ?>
-                    <div class="flex items-start gap-3.5 sm:gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0 group">
-                      <a href="/<?= slugify($art['title']) ?>" class="w-28 sm:w-32 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
+                    <div class="flex items-start gap-3.5 pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 last:pb-0 group">
+                      <a href="/<?= slugify($art['title']) ?>" class="w-24 sm:w-28 aspect-16/9 rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
                         <img src="<?= htmlspecialchars(getSafeArticleImage($art['image'] ?? '', $art['category'] ?? '')) ?>" alt="<?= htmlspecialchars($art['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                       </a>
                       <div class="flex-1 min-w-0">
-                        <span class="text-[#CC0000] font-black text-[10px] sm:text-[11px] uppercase tracking-wider block mb-1">
+                        <span class="text-[#CC0000] font-black text-[10px] uppercase tracking-wider block mb-1">
                           <?= htmlspecialchars($art['sub_category'] ?: $art['category']) ?>
                         </span>
-                        <h3 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 mb-1.5">
+                        <h4 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 mb-1">
                           <a href="/<?= slugify($art['title']) ?>">
                             <?= htmlspecialchars($art['title']) ?>
                           </a>
-                        </h3>
+                        </h4>
                         <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
                           <?= htmlspecialchars($art['author'] ?: 'Redaksi GNN') ?> • <?= htmlspecialchars($art['date'] ?: date('d M Y', strtotime($art['created_at']))) ?>
                         </div>
@@ -2243,83 +2279,41 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                     </div>
                   <?php endforeach; ?>
                 <?php else: ?>
-                  <p class="text-xs text-zinc-400 py-4">Belum ada berita Saintek.</p>
+                  <p class="text-xs text-zinc-400 py-2">Belum ada berita Saintek.</p>
                 <?php endif; ?>
               </div>
             </div>
 
-            <!-- KOLOM 2: SOSIAL TRENDING -->
-            <div>
-              <div class="flex items-center justify-between mb-5 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+            <!-- WIDGET 3: 🔴 LIFESTYLE (TRENDING) -->
+            <div class="bg-zinc-50/70 dark:bg-zinc-900/50 p-5 sm:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#CC0000] inline-block animate-pulse"></span>
-                  <h2 class="font-sans font-black text-xl sm:text-2xl text-zinc-900 dark:text-zinc-100 tracking-tight">
-                    Sosial
-                  </h2>
-                </div>
-                <a href="?category=SOSIAL" class="text-xs font-bold text-zinc-400 hover:text-[#CC0000] uppercase tracking-wider transition">
-                  Trending
-                </a>
-              </div>
-
-              <div class="space-y-5">
-                <?php if (!empty($trendingSosial)): ?>
-                  <?php foreach ($trendingSosial as $art): ?>
-                    <div class="flex items-start gap-3.5 sm:gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0 group">
-                      <a href="/<?= slugify($art['title']) ?>" class="w-28 sm:w-32 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
-                        <img src="<?= htmlspecialchars(getSafeArticleImage($art['image'] ?? '', $art['category'] ?? '')) ?>" alt="<?= htmlspecialchars($art['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                      </a>
-                      <div class="flex-1 min-w-0">
-                        <span class="text-[#CC0000] font-black text-[10px] sm:text-[11px] uppercase tracking-wider block mb-1">
-                          <?= htmlspecialchars($art['sub_category'] ?: $art['category']) ?>
-                        </span>
-                        <h3 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 mb-1.5">
-                          <a href="/<?= slugify($art['title']) ?>">
-                            <?= htmlspecialchars($art['title']) ?>
-                          </a>
-                        </h3>
-                        <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
-                          <?= htmlspecialchars($art['author'] ?: 'Redaksi GNN') ?> • <?= htmlspecialchars($art['date'] ?: date('d M Y', strtotime($art['created_at']))) ?>
-                        </div>
-                      </div>
-                    </div>
-                  <?php endforeach; ?>
-                <?php else: ?>
-                  <p class="text-xs text-zinc-400 py-4">Belum ada berita Sosial.</p>
-                <?php endif; ?>
-              </div>
-            </div>
-
-            <!-- KOLOM 3: LIFESTYLE TRENDING -->
-            <div>
-              <div class="flex items-center justify-between mb-5 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#CC0000] inline-block animate-pulse"></span>
-                  <h2 class="font-sans font-black text-xl sm:text-2xl text-zinc-900 dark:text-zinc-100 tracking-tight">
-                    Lifestyle
-                  </h2>
+                  <h3 class="font-sans font-black text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 uppercase tracking-widest">
+                    LIFESTYLE
+                  </h3>
                 </div>
                 <a href="?category=LIFESTYLE" class="text-xs font-bold text-zinc-400 hover:text-[#CC0000] uppercase tracking-wider transition">
                   Trending
                 </a>
               </div>
 
-              <div class="space-y-5">
+              <div class="space-y-4">
                 <?php if (!empty($trendingLifestyle)): ?>
                   <?php foreach ($trendingLifestyle as $art): ?>
-                    <div class="flex items-start gap-3.5 sm:gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0 group">
-                      <a href="/<?= slugify($art['title']) ?>" class="w-28 sm:w-32 aspect-16/9 sm:aspect-4/3 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
+                    <div class="flex items-start gap-3.5 pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 last:pb-0 group">
+                      <a href="/<?= slugify($art['title']) ?>" class="w-24 sm:w-28 aspect-16/9 rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 block shadow-2xs">
                         <img src="<?= htmlspecialchars(getSafeArticleImage($art['image'] ?? '', $art['category'] ?? '')) ?>" alt="<?= htmlspecialchars($art['title']) ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                       </a>
                       <div class="flex-1 min-w-0">
-                        <span class="text-[#CC0000] font-black text-[10px] sm:text-[11px] uppercase tracking-wider block mb-1">
+                        <span class="text-[#CC0000] font-black text-[10px] uppercase tracking-wider block mb-1">
                           <?= htmlspecialchars($art['sub_category'] ?: $art['category']) ?>
                         </span>
-                        <h3 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 mb-1.5">
+                        <h4 class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-[#CC0000] transition leading-snug line-clamp-2 mb-1">
                           <a href="/<?= slugify($art['title']) ?>">
                             <?= htmlspecialchars($art['title']) ?>
                           </a>
-                        </h3>
+                        </h4>
                         <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
                           <?= htmlspecialchars($art['author'] ?: 'Redaksi GNN') ?> • <?= htmlspecialchars($art['date'] ?: date('d M Y', strtotime($art['created_at']))) ?>
                         </div>
@@ -2327,12 +2321,13 @@ $categoriesList = ['KABAR BAIK', 'INSPIRASI', 'PARIWISATA', 'BUDAYA', 'TEKNOLOGI
                     </div>
                   <?php endforeach; ?>
                 <?php else: ?>
-                  <p class="text-xs text-zinc-400 py-4">Belum ada berita Lifestyle.</p>
+                  <p class="text-xs text-zinc-400 py-2">Belum ada berita Lifestyle.</p>
                 <?php endif; ?>
               </div>
             </div>
 
           </div>
+
         </section>
 
       <?php else: ?>
